@@ -77,15 +77,15 @@ coolove-ui/
 
 ## 组件一览
 
-- **窗口**：`cl-window` `cl-titlebar` `cl-traffic` `cl-brand` `cl-statusbar`（`__time.is-delayed / is-stale`）`cl-panel`
+- **窗口**：`cl-window` `cl-titlebar` `cl-traffic` `cl-brand` `cl-statusbar`（`--divided`、`__actions`、`__time.is-delayed / is-stale`）`cl-panel`
 - **按钮**：`cl-btn`（primary / soft / outline / ghost / danger / danger-solid，sm / lg / icon / pill / block，`is-loading`）、`cl-iconbtn`（accent / danger / sm）、`cl-btn-group`、`cl-close`
 - **表单**：`cl-input`（sm / lg）`cl-input-wrap`（前后缀）`cl-select` `cl-textarea` `cl-stepper` `cl-search`（`__results` `__message`）`cl-field` `cl-setting`
 - **选择**：`cl-switch` `cl-check` `cl-radio` `cl-segmented`（block / subtle / ghost / sm / xs）`cl-range` `cl-swatches` `cl-color`
 - **标签**：`cl-pill`（rise / fall / solid）`cl-badge` `cl-tag` `cl-dot`（live 呼吸）`cl-count` `cl-kbd` `cl-tile`、`data-tip` 提示
-- **列表**：`cl-list`（flush）`cl-card`（`__main / __main--stack / __info / __row / __title / __sub / __chart / __side / __value / __figure / __meta / __icon / __handle / __remove / __strip`，`is-selected / is-dragging / is-drop-target`）
-- **数据**：`cl-stat`（compact）`cl-stat-grid` `cl-table` `cl-kv` `cl-spark` `cl-chart__*` `cl-tooltip-card` `cl-bars` `cl-accordion` `cl-empty` `cl-tabs`
+- **列表**：`cl-list`（flush / dense）`cl-card`（`__main / __main--stack / __info / __row / __title / __sub / __chart / __side / __value / __figure / __meta / __icon / __handle / __remove / __strip`，`--row / --tall / --static`，`is-selected / is-active / is-dragging / is-drop-target`）、`cl-divided`
+- **数据**：`cl-stat`（compact / md，`__arrow`）`cl-stat-grid` `cl-table`（compact）`cl-kv` `cl-spark` `cl-chart__*` `cl-tooltip-card` `cl-bars` `cl-accordion` `cl-empty` `cl-tabs` `cl-section-head` `cl-hint`
 - **反馈**：`cl-alert`（success / warning / danger / banner）`cl-progress` `cl-ring` `cl-meter` + `cl-legend`（dot）`cl-spinner` `cl-skeleton` `cl-toast`
-- **浮层**：`cl-menu`（static）`cl-popover` `cl-dialog`（xs / sm / lg / tall）`cl-sheet` `cl-drawer`；`cl-backdrop--contained` 可把弹窗限制在小部件窗口内
+- **浮层**：`cl-menu`（static）`cl-popover` `cl-dialog`（xs / sm / lg / tall）`cl-sheet` `cl-drawer` `cl-actionbar`；`cl-backdrop--contained` 可把弹窗限制在小部件窗口内
 
 ## coolove-ui.js API
 
