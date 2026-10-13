@@ -1,0 +1,1371 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coolove UI 组件库</title>
+<meta name="description" content="从 A+ 助手提炼的可调透明度玻璃风格组件库">
+<link rel="stylesheet" href="coolove-ui.css">
+<style>
+  /* 展示页布局：左侧是“设置窗口”（本身就是组件示范），右侧依次是两个真实感的小部件窗口和组件画廊；
+     背后是可切换的桌面壁纸 + K 线图层，用来直观看出透明度和模糊的效果。 */
+  html, body { min-height: 100%; }
+  body {
+    margin: 0;
+    background: #0b1020;
+    color: #e5e7eb;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+  }
+  .i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  .sc-wall { position: fixed; inset: 0; z-index: 0; background: var(--wall, #0b1020); background-size: cover; background-position: center; transition: background .4s ease; }
+  .sc-candles { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  .desk {
+    position: relative;
+    z-index: 1;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding-block: 24px 110px;
+    padding-inline: 16px;
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+    background: transparent;
+  }
+  .sc-side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); max-height: calc(100vh - 32px); }
+  .sc-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+
+  /* 设置窗口 */
+  .sc-settings { max-height: calc(100vh - 32px); }
+  .sc-settings .cl-window__body { gap: 0; padding: 4px 16px 8px; }
+  .sc-settings .cl-divider { margin: 10px 0; }
+  .sc-settings__foot { display: flex; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid var(--divider-color); }
+  .sc-walls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 6px; }
+  .sc-wall-btn {
+    aspect-ratio: 1.2;
+    max-width: 100%;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    background: var(--thumb);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgb(var(--ink) / .15);
+    transition: transform var(--ease);
+  }
+  .sc-wall-btn:hover { transform: translateY(-1px); }
+  .sc-wall-btn[aria-pressed="true"] { border-color: var(--accent); }
+  .sc-wall-btn--upload { display: grid; place-items: center; background: var(--surface-2); color: var(--text-muted); }
+  .sc-custom[hidden] { display: none; }
+
+  /* 顶部介绍 */
+  .sc-intro { padding: 18px 20px; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
+  .sc-intro__text { flex: 1 1 320px; min-width: 0; }
+  .sc-intro h1 { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: .01em; text-wrap: balance; }
+  .sc-intro h1 span { color: var(--accent-text); }
+  .sc-intro p { margin: 0; font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); max-width: 62ch; }
+  .sc-intro__meta { display: flex; gap: 18px; }
+  .sc-intro__meta div { display: flex; flex-direction: column; gap: 2px; }
+  .sc-intro__meta strong { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .sc-intro__meta span { font-size: var(--fs-xs); color: var(--text-muted); }
+
+  /* 小部件展示行 */
+  .sc-showroom { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .sc-widget { width: 280px; max-width: 100%; height: 500px; flex-shrink: 0; }
+  .sc-widget .cl-window__body { scrollbar-width: none; }
+  .sc-widget .cl-window__body::-webkit-scrollbar { display: none; }
+  .sc-spark { flex: 1; min-width: 0; max-width: 110px; height: 18px; }
+  .sc-cleaner { flex: 1 1 360px; min-width: 0; height: 500px; }
+  .sc-cleaner .cl-window__body { padding: 12px 14px; gap: 12px; }
+  .sc-disk { display: flex; align-items: center; gap: 16px; }
+  .sc-disk__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .sc-disk__title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .sc-disk__title strong { font-size: var(--fs-lg); }
+  .sc-disk__title span { font-size: var(--fs-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .sc-clean-foot { display: flex; align-items: center; gap: 10px; padding: 10px 14px 14px; border-top: 1px solid var(--divider-color); }
+  .sc-clean-foot__sum { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-sm); color: var(--text-muted); }
+  .sc-clean-foot__sum strong { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .sc-size { font-size: var(--fs-sm); font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* 组件画廊：瀑布流 */
+  .sc-gallery { columns: 2 380px; column-gap: 24px; }
+  .sc-section { break-inside: avoid; margin-bottom: 24px; display: flex; flex-direction: column; }
+  .sc-section__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 16px 4px; }
+  .sc-section__head h2 { margin: 0; font-size: 15px; font-weight: 700; }
+  .sc-section__head code { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); }
+  .sc-section__body { display: flex; flex-direction: column; gap: 14px; padding: 10px 16px 16px; }
+  .sc-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); letter-spacing: .04em; margin-bottom: -6px; }
+  .sc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .sc-rings { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .sc-skel { display: flex; gap: 10px; align-items: center; }
+  .sc-skel > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .sc-menu-demo { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .sc-menu-demo .cl-menu { width: 196px; }
+  .sc-ctx-zone {
+    flex: 1 1 160px;
+    min-height: 120px;
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    text-align: center;
+  }
+  .sc-tokens { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
+  .sc-token { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .sc-token i {
+    height: 38px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--sw), repeating-conic-gradient(rgb(var(--ink) / .12) 0 25%, transparent 0 50%) 0 0 / 10px 10px;
+    background-blend-mode: normal;
+  }
+  .sc-token span { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sc-code {
+    margin: 0;
+    padding: 12px;
+    max-height: 260px;
+    overflow: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: rgb(var(--ink) / .03);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre;
+    user-select: text;
+  }
+  .sc-code b { color: var(--accent-text); font-weight: 500; }
+  .sc-code em { color: var(--text-muted); font-style: normal; }
+
+  .sc-dock {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    z-index: 90;
+    width: min(360px, calc(100% - 32px));
+    transform: translateX(-50%);
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px 6px 14px;
+    border-radius: var(--radius-pill);
+  }
+  .sc-dock .cl-range { margin: 0; }
+  .sc-dock__val { font-size: var(--fs-sm); font-weight: 700; color: var(--accent-text); font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
+
+  @media (max-width: 1040px) {
+    .desk { grid-template-columns: minmax(0, 1fr); }
+    .cl-toast-stack { bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); }
+    .sc-side { position: static; max-height: none; }
+    .sc-settings { max-height: none; }
+    .sc-dock { display: flex; }
+  }
+  @media (max-width: 520px) {
+    .sc-widget { width: 100%; }
+    .sc-stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .sc-disk { flex-direction: column; align-items: stretch; }
+    .sc-disk .cl-ring { align-self: center; }
+  }
+</style>
+
+<!-- 图标（线性，仿 lucide） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><path d="M16 5h6M19 2v6"/><path d="M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/><circle cx="9" cy="9" r="2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 4h6v6.5l2.5 3.5h-11L9 10.5z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+  <symbol id="i-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01M10 16h.01"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2a5.6 5.6 0 0 0 5.6-5.6C22 6 17.5 2 12 2z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+</svg>
+
+<div class="sc-wall" id="wall"></div>
+<canvas class="sc-candles" id="candles" aria-hidden="true"></canvas>
+
+<div class="desk cl-scope" id="desk" data-cl-root data-theme="dark">
+
+  <!-- ================= 左：外观设置窗口 ================= -->
+  <aside class="sc-side">
+    <section class="cl-window sc-settings" aria-label="外观设置">
+      <header class="cl-titlebar">
+        <div class="cl-traffic">
+          <button class="cl-traffic__btn cl-traffic__btn--close" type="button" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          <button class="cl-traffic__btn cl-traffic__btn--min" type="button" aria-label="最小化"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+          <button class="cl-traffic__btn cl-traffic__btn--settings" type="button" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="12" cy="12" r="4"/></svg></button>
+        </div>
+        <span class="cl-titlebar__title" style="cursor:default">外观</span>
+      </header>
+
+      <div class="cl-window__body cl-scroll">
+        <div class="cl-setting" style="flex-direction:column;align-items:stretch;gap:8px">
+          <span class="cl-setting__label">主题</span>
+          <div class="cl-segmented cl-segmented--block" data-cl-select id="ctlTheme" role="group" aria-label="主题">
+            <button class="cl-segmented__item" type="button" data-value="dark" aria-pressed="true"><svg class="i"><use href="#i-moon"/></svg>深色</button>
+            <button class="cl-segmented__item" type="button" data-value="light" aria-pressed="false"><svg class="i"><use href="#i-sun"/></svg>浅色</button>
+            <button class="cl-segmented__item" type="button" data-value="custom" aria-pressed="false"><svg class="i"><use href="#i-palette"/></svg>自定义</button>
+          </div>
+          <div class="cl-panel sc-custom" id="customPanel" hidden>
+            <div class="cl-stack">
+              <label class="cl-row" style="justify-content:space-between" for="ctlCustomBg">
+                <span class="cl-stack" style="gap:2px"><span style="font-size:var(--fs-sm);font-weight:500">背景色</span><span class="cl-mono cl-muted" style="font-size:11px" id="customBgHex">#1F2937</span></span>
+                <input class="cl-color" type="color" id="ctlCustomBg" value="#1f2937">
+              </label>
+              <label class="cl-row" style="justify-content:space-between" for="ctlCustomFg">
+                <span class="cl-stack" style="gap:2px"><span style="font-size:var(--fs-sm);font-weight:500">文字色</span><span class="cl-mono cl-muted" style="font-size:11px" id="customFgHex">#FFFFFF</span></span>
+                <input class="cl-color" type="color" id="ctlCustomFg" value="#ffffff">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <hr class="cl-divider">
+
+        <div>
+          <div class="cl-setting" style="padding-bottom:0">
+            <div class="cl-setting__info"><span class="cl-setting__label">背景不透明度</span><span class="cl-setting__desc">越低越通透，浮层不受影响</span></div>
+            <span class="cl-setting__value js-opacity-val">85%</span>
+          </div>
+          <input class="cl-range js-opacity" id="ctlOpacity" type="range" min="0" max="100" value="85" aria-label="背景不透明度">
+        </div>
+        <div>
+          <div class="cl-setting" style="padding-bottom:0">
+            <div class="cl-setting__info"><span class="cl-setting__label">磨砂模糊</span><span class="cl-setting__desc">backdrop-filter 半径</span></div>
+            <span class="cl-setting__value" id="blurVal">26px</span>
+          </div>
+          <input class="cl-range" id="ctlBlur" type="range" min="0" max="60" value="26" aria-label="磨砂模糊">
+        </div>
+
+        <hr class="cl-divider">
+
+        <div class="cl-stack" style="gap:8px">
+          <span class="cl-setting__label">强调色</span>
+          <div class="cl-swatches" id="ctlAccent">
+            <button class="cl-swatch" type="button" style="--swatch:#1d9bf0" data-value="#1d9bf0" aria-label="原版蓝" data-tip="原版蓝"></button>
+            <button class="cl-swatch" type="button" style="--swatch:#2d7cf6" data-value="#2d7cf6" aria-label="深海蓝" data-tip="深海蓝"></button>
+            <button class="cl-swatch" type="button" style="--swatch:#8b5cf6" data-value="#8b5cf6" aria-label="紫罗兰" data-tip="紫罗兰"></button>
+            <button class="cl-swatch" type="button" style="--swatch:#14b8a6" data-value="#14b8a6" aria-label="青碧" data-tip="青碧"></button>
+            <button class="cl-swatch" type="button" style="--swatch:#f59e0b" data-value="#f59e0b" aria-label="琥珀" data-tip="琥珀"></button>
+            <button class="cl-swatch" type="button" style="--swatch:#ec4899" data-value="#ec4899" aria-label="桃红" data-tip="桃红"></button>
+            <input class="cl-color" type="color" id="ctlAccentCustom" value="#1d9bf0" aria-label="自选强调色" style="width:26px;height:22px">
+          </div>
+        </div>
+
+        <hr class="cl-divider">
+
+        <div class="cl-stack" style="gap:10px">
+          <div class="cl-setting" style="padding:0"><span class="cl-setting__label">圆角</span>
+            <div class="cl-segmented cl-segmented--subtle" data-cl-select id="ctlRadius" role="group" aria-label="圆角">
+              <button class="cl-segmented__item" type="button" data-value="0.55" aria-pressed="false">利落</button>
+              <button class="cl-segmented__item" type="button" data-value="1" aria-pressed="true">标准</button>
+              <button class="cl-segmented__item" type="button" data-value="1.4" aria-pressed="false">圆润</button>
+            </div>
+          </div>
+          <div class="cl-setting" style="padding:0"><span class="cl-setting__label">密度</span>
+            <div class="cl-segmented cl-segmented--subtle" data-cl-select id="ctlDensity" role="group" aria-label="密度">
+              <button class="cl-segmented__item" type="button" data-value="comfortable" aria-pressed="true">标准</button>
+              <button class="cl-segmented__item" type="button" data-value="compact" aria-pressed="false">紧凑</button>
+            </div>
+          </div>
+          <div class="cl-setting" style="padding:0"><span class="cl-setting__label">涨跌配色</span>
+            <div class="cl-segmented cl-segmented--subtle" data-cl-select id="ctlTrend" role="group" aria-label="涨跌配色">
+              <button class="cl-segmented__item" type="button" data-value="cn" aria-pressed="true">红涨绿跌</button>
+              <button class="cl-segmented__item" type="button" data-value="intl" aria-pressed="false">绿涨红跌</button>
+            </div>
+          </div>
+          <div class="cl-setting" style="padding:0">
+            <div class="cl-setting__info"><span class="cl-setting__label">浮层半透明</span><span class="cl-setting__desc">原版为不透明，保证可读</span></div>
+            <label class="cl-switch"><input type="checkbox" id="ctlOverlay"><span class="cl-switch__track"></span></label>
+          </div>
+        </div>
+
+        <hr class="cl-divider">
+
+        <div class="cl-stack" style="gap:8px">
+          <div class="cl-setting" style="padding:0">
+            <span class="cl-setting__label">桌面壁纸</span>
+            <label class="cl-check" for="ctlCandles"><input type="checkbox" id="ctlCandles" checked>K 线图层</label>
+          </div>
+          <div class="sc-walls" id="ctlWall"></div>
+          <input type="file" id="wallFile" accept="image/*" hidden>
+        </div>
+      </div>
+
+      <div class="sc-settings__foot">
+        <button class="cl-btn cl-btn--sm" type="button" id="btnReset" style="flex:1">恢复默认</button>
+        <button class="cl-btn cl-btn--sm cl-btn--soft" type="button" id="btnCopyCfg" style="flex:1"><svg class="i"><use href="#i-copy"/></svg>复制配置</button>
+      </div>
+    </section>
+  </aside>
+
+  <!-- ================= 右：展示区 ================= -->
+  <main class="sc-main">
+
+    <section class="cl-window sc-intro">
+      <div class="sc-intro__text">
+        <h1>Coolove <span>UI</span></h1>
+        <p>从 A+ 助手提炼的玻璃风格：窗口底色随不透明度变化，卡片只叠极淡的蒙层，弹窗和菜单保持不透明以保证可读。左侧调参数，下面所有组件实时跟着变。</p>
+      </div>
+      <div class="sc-intro__meta">
+        <div><strong id="compCount">42</strong><span>组件与变体</span></div>
+        <div><strong>3</strong><span>主题模式</span></div>
+        <div><strong>0</strong><span>运行时依赖</span></div>
+      </div>
+    </section>
+
+    <!-- 两个真实感窗口 -->
+    <div class="sc-showroom">
+      <!-- 原项目风格还原：自选股小部件 -->
+      <section class="cl-window sc-widget" id="stockWidget" aria-label="自选股小部件示例">
+        <header class="cl-titlebar">
+          <div class="cl-traffic">
+            <button class="cl-traffic__btn cl-traffic__btn--close" type="button" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            <button class="cl-traffic__btn cl-traffic__btn--min" type="button" aria-label="最小化"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+            <button class="cl-traffic__btn cl-traffic__btn--settings" type="button" aria-label="快捷设置" data-cl-open="#widgetQuick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="12" cy="12" r="4"/></svg></button>
+          </div>
+          <button class="cl-brand" type="button" aria-pressed="false" data-cl-toggle title="量化">A+</button>
+          <button class="cl-titlebar__title" type="button" id="assetToggle">Stock Assistant</button>
+        </header>
+        <div class="cl-window__body" id="stockList"></div>
+        <footer class="cl-statusbar">
+          <div class="cl-search" id="stockSearch">
+            <div class="cl-input-wrap">
+              <span class="cl-input-wrap__prefix"><svg class="i"><use href="#i-search"/></svg></span>
+              <input class="cl-input cl-input--sm" id="stockSearchInput" type="text" placeholder="搜索股票名称/代码" autocomplete="off">
+            </div>
+            <div class="cl-search__results cl-search__results--up" id="stockSearchResults" hidden></div>
+          </div>
+          <button class="cl-iconbtn cl-iconbtn--accent" type="button" aria-label="图片导入持仓" data-tip="图片导入"><svg class="i"><use href="#i-image"/></svg></button>
+          <button class="cl-iconbtn cl-iconbtn--accent" type="button" aria-label="市场助手" data-tip="市场助手"><svg class="i"><use href="#i-globe"/></svg></button>
+          <button class="cl-iconbtn" type="button" id="btnRefresh" aria-label="刷新" data-tip="刷新"><svg class="i"><use href="#i-refresh"/></svg></button>
+          <span class="cl-statusbar__time" id="clock">15:46:45</span>
+        </footer>
+
+        <div class="cl-backdrop cl-backdrop--contained" id="widgetQuick" hidden>
+          <div class="cl-dialog cl-dialog--sm" role="dialog" aria-modal="true" aria-labelledby="wqTitle">
+            <div class="cl-dialog__head">
+              <h3 class="cl-dialog__title" id="wqTitle">快捷设置</h3>
+              <button class="cl-close" type="button" data-cl-close aria-label="关闭"><svg class="i"><use href="#i-x"/></svg></button>
+            </div>
+            <div class="cl-dialog__body">
+              <div class="cl-setting" style="padding-bottom:0"><span class="cl-setting__label">背景不透明度</span><span class="cl-setting__value js-opacity-val">85%</span></div>
+              <input class="cl-range js-opacity" id="wqOpacity" type="range" min="0" max="100" value="85" aria-label="背景不透明度">
+              <div class="cl-setting">
+                <div class="cl-setting__info"><span class="cl-setting__label">窗口置顶</span><span class="cl-setting__desc">始终显示在其他窗口之上</span></div>
+                <label class="cl-switch cl-switch--sm"><input type="checkbox" id="wqTop" checked><span class="cl-switch__track"></span></label>
+              </div>
+              <div class="cl-setting">
+                <div class="cl-setting__info"><span class="cl-setting__label">显示分时图</span></div>
+                <label class="cl-switch cl-switch--sm"><input type="checkbox" id="wqSpark" checked><span class="cl-switch__track"></span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 新组件组合示例：磁盘清理 -->
+      <section class="cl-window sc-cleaner" aria-label="磁盘清理示例">
+        <header class="cl-titlebar">
+          <div class="cl-traffic">
+            <button class="cl-traffic__btn cl-traffic__btn--close" type="button" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            <button class="cl-traffic__btn cl-traffic__btn--min" type="button" aria-label="最小化"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+            <button class="cl-traffic__btn cl-traffic__btn--max" type="button" aria-label="最大化"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 17 17 7M9 7h8v8"/></svg></button>
+          </div>
+          <span class="cl-titlebar__title" style="cursor:default">Disk Cleaner</span>
+          <span class="cl-titlebar__spacer"></span>
+          <span class="cl-badge cl-badge--success" id="scanBadge"><span class="cl-dot cl-dot--live"></span>扫描完成</span>
+        </header>
+
+        <div class="cl-window__body">
+          <div class="sc-disk">
+            <div class="cl-ring" id="diskRing" style="--val:72;--size:92px" role="img" aria-label="C 盘已用 72%">
+              <div class="cl-ring__label"><span class="cl-ring__value" id="diskPct">72%</span><span class="cl-ring__unit">C 盘已用</span></div>
+            </div>
+            <div class="sc-disk__info">
+              <div class="sc-disk__title"><strong>本地磁盘 (C:)</strong><span id="diskUsed">171.6 / 238.4 GB</span></div>
+              <div class="cl-meter" id="diskMeter">
+                <i style="--w:31;--c:#64748b"></i><i style="--w:22;--c:var(--accent)"></i><i style="--w:12;--c:#8b5cf6" id="meterCache"></i><i style="--w:7;--c:var(--warning)" id="meterJunk"></i>
+              </div>
+              <div class="cl-legend">
+                <span style="--c:#64748b">系统</span><span style="--c:var(--accent)">应用</span><span style="--c:#8b5cf6">缓存</span><span style="--c:var(--warning)">可清理</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cl-tabs" role="tablist" data-cl-select aria-label="清理类型">
+            <button class="cl-tabs__item" role="tab" type="button" aria-selected="true" aria-controls="tabJunk">垃圾文件<span class="cl-count cl-count--accent">5</span></button>
+            <button class="cl-tabs__item" role="tab" type="button" aria-selected="false" aria-controls="tabBig">大文件</button>
+            <button class="cl-tabs__item" role="tab" type="button" aria-selected="false" aria-controls="tabDup">重复文件</button>
+          </div>
+
+          <div class="cl-tabpanel cl-list" id="tabJunk" role="tabpanel"></div>
+          <div class="cl-tabpanel" id="tabBig" role="tabpanel" hidden>
+            <div class="cl-table-wrap">
+              <table class="cl-table">
+                <thead><tr><th>文件</th><th>位置</th><th class="is-num">大小</th></tr></thead>
+                <tbody>
+                  <tr><td>Win11_23H2.iso</td><td class="cl-muted">D:\Downloads</td><td class="is-num">6.1 GB</td></tr>
+                  <tr><td>hiberfil.sys</td><td class="cl-muted">C:\</td><td class="is-num">3.2 GB</td></tr>
+                  <tr><td>node_modules.zip</td><td class="cl-muted">D:\Code\backup</td><td class="is-num">1.4 GB</td></tr>
+                  <tr><td>录屏_0921.mp4</td><td class="cl-muted">C:\Users\Videos</td><td class="is-num">980 MB</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="cl-tabpanel" id="tabDup" role="tabpanel" hidden>
+            <div class="cl-empty">
+              <div class="cl-empty__icon"><svg class="i"><use href="#i-copy"/></svg></div>
+              <div class="cl-empty__title">没有发现重复文件</div>
+              <div class="cl-empty__desc">已比对 12,408 个文件的大小和哈希值。</div>
+              <button class="cl-btn cl-btn--sm cl-btn--ghost" type="button">重新比对</button>
+            </div>
+          </div>
+        </div>
+
+        <footer class="sc-clean-foot">
+          <div class="sc-clean-foot__sum">
+            <span>已选 <strong id="selSize">0 B</strong> · <span id="selCount">0</span> 项</span>
+            <div class="cl-progress cl-progress--sm cl-progress--striped" id="cleanProgress" hidden><div class="cl-progress__bar"></div></div>
+          </div>
+          <button class="cl-btn" type="button" id="btnRescan"><svg class="i"><use href="#i-refresh"/></svg>重新扫描</button>
+          <button class="cl-btn cl-btn--primary" type="button" id="btnClean"><svg class="i"><use href="#i-spark"/></svg>开始清理</button>
+        </footer>
+      </section>
+    </div>
+
+    <!-- ================= 组件画廊 ================= -->
+    <div class="sc-gallery">
+
+      <!-- 按钮 -->
+      <section class="cl-window sc-section" id="buttons">
+        <div class="sc-section__head"><h2>按钮</h2><code>.cl-btn .cl-iconbtn</code></div>
+        <div class="sc-section__body">
+          <div class="sc-label">变体</div>
+          <div class="cl-row">
+            <button class="cl-btn cl-btn--primary" type="button">主要操作</button>
+            <button class="cl-btn" type="button">次要</button>
+            <button class="cl-btn cl-btn--soft" type="button">柔和</button>
+            <button class="cl-btn cl-btn--outline" type="button">描边</button>
+            <button class="cl-btn cl-btn--ghost" type="button">幽灵</button>
+            <button class="cl-btn cl-btn--danger" type="button">删除</button>
+          </div>
+          <div class="sc-label">尺寸与形状</div>
+          <div class="cl-row">
+            <button class="cl-btn cl-btn--primary cl-btn--sm" type="button">小号</button>
+            <button class="cl-btn cl-btn--primary" type="button">标准</button>
+            <button class="cl-btn cl-btn--primary cl-btn--lg" type="button"><svg class="i"><use href="#i-download"/></svg>大号</button>
+            <button class="cl-btn cl-btn--soft cl-btn--pill" type="button"><svg class="i"><use href="#i-plus"/></svg>添加自选</button>
+            <button class="cl-btn cl-btn--icon" type="button" aria-label="更多"><svg class="i"><use href="#i-more"/></svg></button>
+          </div>
+          <div class="sc-label">状态栏图标按钮</div>
+          <div class="cl-row" style="gap:4px">
+            <button class="cl-iconbtn cl-iconbtn--accent" type="button" aria-label="导入" data-tip="导入"><svg class="i"><use href="#i-image"/></svg></button>
+            <button class="cl-iconbtn cl-iconbtn--accent" type="button" aria-label="市场" data-tip="市场"><svg class="i"><use href="#i-globe"/></svg></button>
+            <button class="cl-iconbtn" type="button" aria-label="提醒" data-tip="提醒"><svg class="i"><use href="#i-bell"/></svg></button>
+            <button class="cl-iconbtn cl-iconbtn--accent is-active" type="button" aria-label="收藏" data-tip="已收藏"><svg class="i"><use href="#i-star"/></svg></button>
+            <button class="cl-iconbtn cl-iconbtn--danger" type="button" aria-label="删除" data-tip="删除"><svg class="i"><use href="#i-trash"/></svg></button>
+            <span class="cl-spacer"></span>
+            <div class="cl-btn-group">
+              <button class="cl-btn cl-btn--sm" type="button">分时</button>
+              <button class="cl-btn cl-btn--sm" type="button">日K</button>
+              <button class="cl-btn cl-btn--sm" type="button">周K</button>
+            </div>
+          </div>
+          <div class="sc-label">加载与禁用</div>
+          <div class="cl-row">
+            <button class="cl-btn cl-btn--primary" type="button" id="btnLoading">点我加载</button>
+            <button class="cl-btn" type="button" disabled>已禁用</button>
+            <button class="cl-btn cl-btn--block cl-btn--outline" type="button" style="flex:1 1 140px">块级按钮</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 标签与状态 -->
+      <section class="cl-window sc-section" id="badges">
+        <div class="sc-section__head"><h2>标签与状态</h2><code>.cl-pill .cl-badge .cl-tag .cl-dot</code></div>
+        <div class="sc-section__body">
+          <div class="sc-label">涨跌胶囊</div>
+          <div class="cl-row">
+            <span class="cl-pill cl-pill--rise">+4.01%</span>
+            <span class="cl-pill cl-pill--fall">-2.84%</span>
+            <span class="cl-pill">0.00%</span>
+            <span class="cl-pill cl-pill--rise cl-pill--solid">+10.00%</span>
+            <span class="cl-pill cl-pill--fall cl-pill--solid">-9.98%</span>
+          </div>
+          <div class="sc-label">状态徽标</div>
+          <div class="cl-row">
+            <span class="cl-badge cl-badge--danger">失败</span>
+            <span class="cl-badge cl-badge--warning">延迟</span>
+            <span class="cl-badge cl-badge--success"><span class="cl-dot cl-dot--live"></span>实时</span>
+            <span class="cl-badge cl-badge--accent">ETF</span>
+            <span class="cl-badge">停牌</span>
+            <span class="cl-row" style="gap:6px;font-size:12px;color:var(--text-secondary)"><span class="cl-dot cl-dot--warn"></span>午间休市</span>
+            <span class="cl-row" style="gap:6px;font-size:12px;color:var(--text-secondary)">消息<span class="cl-count">3</span></span>
+          </div>
+          <div class="sc-label">筛选与可移除标签</div>
+          <div class="cl-row" style="gap:6px">
+            <button class="cl-tag" type="button" data-cl-toggle aria-pressed="true">半导体</button>
+            <button class="cl-tag" type="button" data-cl-toggle aria-pressed="false">新能源</button>
+            <button class="cl-tag" type="button" data-cl-toggle aria-pressed="false">医药</button>
+            <button class="cl-tag" type="button" data-cl-toggle aria-pressed="true">ETF</button>
+            <span class="cl-tag">沪深 300<button class="cl-tag__x" type="button" aria-label="移除"><svg class="i"><use href="#i-x"/></svg></button></span>
+            <span class="cl-tag">创业板<button class="cl-tag__x" type="button" aria-label="移除"><svg class="i"><use href="#i-x"/></svg></button></span>
+          </div>
+          <div class="sc-label">快捷键</div>
+          <div class="cl-row" style="gap:6px;font-size:12px;color:var(--text-secondary)"><span class="cl-kbd">Ctrl</span>+<span class="cl-kbd">K</span> 搜索　<span class="cl-kbd">Esc</span> 关闭浮层</div>
+        </div>
+      </section>
+
+      <!-- 表单 -->
+      <section class="cl-window sc-section" id="inputs">
+        <div class="sc-section__head"><h2>输入</h2><code>.cl-input .cl-select .cl-stepper</code></div>
+        <div class="sc-section__body">
+          <div class="cl-field">
+            <label class="cl-field__label" for="fSearch">搜索</label>
+            <div class="cl-search">
+              <div class="cl-input-wrap">
+                <span class="cl-input-wrap__prefix"><svg class="i"><use href="#i-search"/></svg></span>
+                <input class="cl-input" id="fSearch" type="text" placeholder="输入代码、拼音或名称" autocomplete="off">
+                <span class="cl-input-wrap__suffix"><span class="cl-kbd">Ctrl K</span></span>
+              </div>
+              <div class="cl-search__results cl-search__results--down" id="fSearchResults" hidden></div>
+            </div>
+          </div>
+          <div class="cl-row" style="align-items:flex-start">
+            <div class="cl-field" style="flex:1 1 140px">
+              <label class="cl-field__label" for="fCost">成本价</label>
+              <div class="cl-input-wrap">
+                <span class="cl-input-wrap__prefix">¥</span>
+                <input class="cl-input cl-num" id="fCost" type="text" value="22.150">
+              </div>
+            </div>
+            <div class="cl-field" style="flex:1 1 140px">
+              <label class="cl-field__label" for="fCode">基金代码</label>
+              <input class="cl-input is-invalid" id="fCode" type="text" value="02365" aria-describedby="fCodeErr">
+              <span class="cl-field__error" id="fCodeErr">基金代码需为 6 位数字</span>
+            </div>
+          </div>
+          <div class="cl-row" style="align-items:flex-end">
+            <div class="cl-field" style="flex:1 1 150px">
+              <label class="cl-field__label" for="fFont">字体</label>
+              <select class="cl-select" id="fFont">
+                <option>系统默认</option><option selected>微软雅黑</option><option>思源黑体</option><option>等线</option><option>等宽字体</option>
+              </select>
+            </div>
+            <div class="cl-field">
+              <label class="cl-field__label" for="fQty">持仓数量（手）</label>
+              <div class="cl-stepper">
+                <button type="button" aria-label="减少">−</button>
+                <input id="fQty" type="number" value="12" min="0" max="999" step="1">
+                <button type="button" aria-label="增加">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="cl-field">
+            <label class="cl-field__label" for="fNote">备注</label>
+            <textarea class="cl-textarea" id="fNote" placeholder="记录买入理由，下次复盘时看">突破年线后回踩确认，止损设在 20.8</textarea>
+            <span class="cl-field__desc">仅保存在本机。</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 选择控件 -->
+      <section class="cl-window sc-section" id="choices">
+        <div class="sc-section__head"><h2>选择</h2><code>.cl-switch .cl-check .cl-radio .cl-segmented</code></div>
+        <div class="sc-section__body" style="gap:10px">
+          <div class="cl-setting">
+            <div class="cl-setting__info"><span class="cl-setting__label">开机自启动</span><span class="cl-setting__desc">登录 Windows 后自动打开</span></div>
+            <label class="cl-switch"><input type="checkbox" id="sAuto" checked><span class="cl-switch__track"></span></label>
+          </div>
+          <div class="cl-setting">
+            <div class="cl-setting__info"><span class="cl-setting__label">关闭时最小化到托盘</span></div>
+            <label class="cl-switch"><input type="checkbox" id="sTray"><span class="cl-switch__track"></span></label>
+          </div>
+          <div class="cl-setting">
+            <div class="cl-setting__info"><span class="cl-setting__label">收盘提醒</span><span class="cl-setting__desc">需要先登录账户</span></div>
+            <label class="cl-switch"><input type="checkbox" id="sNotify" disabled><span class="cl-switch__track"></span></label>
+          </div>
+          <hr class="cl-divider" style="margin:2px 0">
+          <div class="cl-row" style="gap:16px">
+            <label class="cl-check" for="c1"><input type="checkbox" id="c1" checked>显示指数</label>
+            <label class="cl-check" for="c2"><input type="checkbox" id="c2" checked>显示分时</label>
+            <label class="cl-check" for="c3"><input type="checkbox" id="c3">显示持仓</label>
+            <label class="cl-check" for="c4"><input type="checkbox" id="c4" class="js-indeterminate">全选</label>
+          </div>
+          <div class="cl-row" style="gap:16px" role="radiogroup" aria-label="刷新频率">
+            <label class="cl-radio" for="r1"><input type="radio" name="freq" id="r1">1 秒</label>
+            <label class="cl-radio" for="r2"><input type="radio" name="freq" id="r2" checked>3 秒</label>
+            <label class="cl-radio" for="r3"><input type="radio" name="freq" id="r3">10 秒</label>
+          </div>
+          <div class="cl-segmented" data-cl-select role="group" aria-label="周期">
+            <button class="cl-segmented__item" type="button" aria-pressed="true">分时</button>
+            <button class="cl-segmented__item" type="button" aria-pressed="false">五日</button>
+            <button class="cl-segmented__item" type="button" aria-pressed="false">日K</button>
+            <button class="cl-segmented__item" type="button" aria-pressed="false">周K</button>
+            <button class="cl-segmented__item" type="button" aria-pressed="false">月K</button>
+          </div>
+          <div class="cl-segmented cl-segmented--subtle cl-segmented--block" data-cl-select role="group" aria-label="资产类型">
+            <button class="cl-segmented__item" type="button" aria-pressed="true">股票</button>
+            <button class="cl-segmented__item" type="button" aria-pressed="false">基金</button>
+            <button class="cl-segmented__item" type="button" aria-pressed="false">指数</button>
+          </div>
+          <div>
+            <div class="cl-setting" style="padding-bottom:0"><span class="cl-setting__label">提醒阈值</span><span class="cl-setting__value" id="thVal">±5%</span></div>
+            <input class="cl-range" id="fThreshold" type="range" min="1" max="10" value="5" aria-label="提醒阈值">
+          </div>
+        </div>
+      </section>
+
+      <!-- 列表卡片 -->
+      <section class="cl-window sc-section" id="cards">
+        <div class="sc-section__head"><h2>列表卡片</h2><code>.cl-card</code></div>
+        <div class="sc-section__body">
+          <div class="cl-list" id="cardDemo">
+            <div class="cl-card is-selected" tabindex="0" role="button">
+              <div class="cl-card__main">
+                <div class="cl-card__info"><div class="cl-card__title">沃格光电</div><div class="cl-card__sub">603773</div></div>
+                <div class="sc-spark"><svg data-cl-spark="76.2,77.1,78.4,77.9,79.3,80.1,79.6,80.8" data-ref="77.4"></svg></div>
+              </div>
+              <div class="cl-card__side"><span class="cl-pill cl-pill--rise">+4.38%</span><span class="cl-card__value">80.80</span></div>
+              <div class="cl-card__strip cl-rise"><span>成本 16,420.00</span><span>市值 19,392.00</span><strong class="cl-rise">盈亏 +2,972.00 / +18.10%</strong></div>
+            </div>
+            <div class="cl-card" tabindex="0" role="button">
+              <div class="cl-card__main" style="flex-direction:column;align-items:stretch;gap:5px">
+                <div class="cl-card__title">华夏国证半导体芯片ETF联接C</div>
+                <div class="cl-row" style="gap:8px;flex-wrap:nowrap"><span class="cl-card__sub">008887</span><div class="sc-spark" style="max-width:none"><svg data-cl-spark="1.79,1.785,1.776,1.781,1.772,1.768,1.762,1.759" data-ref="1.776"></svg></div></div>
+              </div>
+              <div class="cl-card__side"><strong class="cl-fall cl-num" style="font-size:17px;font-weight:900">-0.96%</strong><span class="cl-card__value" style="font-size:12px">1.7590</span><span class="cl-muted" style="font-size:9px">估值 14:58</span></div>
+            </div>
+            <div class="cl-card cl-card--static">
+              <div class="cl-card__icon"><svg class="i"><use href="#i-chart"/></svg></div>
+              <div class="cl-card__main"><div class="cl-card__info"><div class="cl-card__title">因子评分</div><div class="cl-card__sub">每日 15:30 更新 · 覆盖 4,812 只</div></div></div>
+              <span class="cl-badge cl-badge--accent">新</span>
+            </div>
+          </div>
+          <div class="cl-alert"><svg class="i"><use href="#i-info"/></svg><div class="cl-alert__body">上方小部件里的卡片支持悬停删除、右键菜单；卡片下方可展开明细条。</div></div>
+        </div>
+      </section>
+
+      <!-- 数据展示 -->
+      <section class="cl-window sc-section" id="data">
+        <div class="sc-section__head"><h2>数据展示</h2><code>.cl-stat .cl-table .cl-kv .cl-bars</code></div>
+        <div class="sc-section__body">
+          <div class="sc-stats">
+            <div class="cl-stat"><span class="cl-stat__label">总市值</span><span class="cl-stat__value">12.8万</span><span class="cl-stat__delta cl-rise">+1,284.50</span></div>
+            <div class="cl-stat"><span class="cl-stat__label">当日盈亏</span><span class="cl-stat__value cl-rise">+1.02%</span><span class="cl-stat__delta cl-muted">5 涨 / 3 跌</span></div>
+            <div class="cl-stat"><span class="cl-stat__label">持仓收益</span><span class="cl-stat__value cl-fall">-3.4%</span><span class="cl-stat__delta cl-fall">-4,410.00</span></div>
+          </div>
+          <div>
+            <div class="cl-row" style="justify-content:space-between;margin-bottom:6px"><span class="sc-label" style="margin:0">近 20 日成交量</span><span class="cl-muted cl-num" style="font-size:11px">单位：万手</span></div>
+            <div class="cl-bars" id="barsDemo"></div>
+          </div>
+          <div class="cl-table-wrap">
+            <table class="cl-table" id="sortTable">
+              <thead><tr><th class="is-sortable" data-k="0">名称</th><th class="is-sortable is-num" data-k="1">现价</th><th class="is-sortable is-num" data-k="2" aria-sort="descending">涨跌幅</th><th class="is-num">换手</th></tr></thead>
+              <tbody>
+                <tr><td>澳弘电子</td><td class="is-num">53.35</td><td class="is-num cl-rise">+10.00%</td><td class="is-num">18.2%</td></tr>
+                <tr><td>有研新材</td><td class="is-num">47.95</td><td class="is-num cl-rise">+7.41%</td><td class="is-num">9.6%</td></tr>
+                <tr><td>长江材料</td><td class="is-num">19.28</td><td class="is-num cl-fall">-0.05%</td><td class="is-num">2.1%</td></tr>
+                <tr><td>国轩高科</td><td class="is-num">30.41</td><td class="is-num cl-fall">-2.84%</td><td class="is-num">3.4%</td></tr>
+                <tr><td>超声电子</td><td class="is-num">21.33</td><td class="is-num cl-fall">-6.08%</td><td class="is-num">7.7%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <dl class="cl-kv">
+            <dt>今开</dt><dd>22.10</dd>
+            <dt>最高</dt><dd class="cl-rise">23.05</dd>
+            <dt>最低</dt><dd class="cl-fall">21.86</dd>
+            <dt>市盈率 TTM</dt><dd>31.2</dd>
+          </dl>
+          <div class="cl-accordion">
+            <details open><summary>为什么浮层不跟随透明度？</summary><div class="cl-accordion__body">窗口调到 20% 时，半透明的菜单会和背后的桌面内容混在一起。原项目把弹窗、菜单、下拉的底色固定为不透明的 --solid-bg，这里保留了这个约定；左侧“浮层半透明”可以改。</div></details>
+            <details><summary>自定义主题如何派生颜色？</summary><div class="cl-accordion__body">只需要给背景色和文字色两个值，卡片、边框、次要文字等都用 color-mix 从文字色按比例派生。</div></details>
+          </div>
+        </div>
+      </section>
+
+      <!-- 反馈 -->
+      <section class="cl-window sc-section" id="feedback">
+        <div class="sc-section__head"><h2>反馈</h2><code>.cl-alert .cl-progress .cl-ring .cl-toast</code></div>
+        <div class="sc-section__body">
+          <div class="cl-alert cl-alert--success"><svg class="i"><use href="#i-ok"/></svg><div class="cl-alert__body"><span class="cl-alert__title">更新完成</span>A+ 助手已更新到 1.2.8，重启后生效。</div></div>
+          <div class="cl-alert cl-alert--warning"><svg class="i"><use href="#i-warn"/></svg><div class="cl-alert__body">行情延迟 32 秒，正在重试数据源。</div><button class="cl-close" type="button" aria-label="关闭" onclick="this.closest('.cl-alert').remove()"><svg class="i"><use href="#i-x"/></svg></button></div>
+          <div class="cl-alert cl-alert--danger"><svg class="i"><use href="#i-alert"/></svg><div class="cl-alert__body"><span class="cl-alert__title">导入失败</span>截图中没有识别到持仓表格，请截取完整的持仓页面。</div></div>
+
+          <div class="sc-label">进度</div>
+          <div class="cl-stack" style="gap:10px">
+            <div class="cl-progress" style="--val:64"><div class="cl-progress__bar"></div></div>
+            <div class="cl-progress cl-progress--success cl-progress--sm" style="--val:100"><div class="cl-progress__bar"></div></div>
+            <div class="cl-progress cl-progress--striped cl-progress--lg" id="liveProgress" style="--val:30"><div class="cl-progress__bar"></div></div>
+            <div class="cl-progress cl-progress--indeterminate cl-progress--sm"><div class="cl-progress__bar"></div></div>
+          </div>
+          <div class="sc-rings">
+            <div class="cl-ring" style="--val:38;--size:64px;--thick:6px"><div class="cl-ring__label"><span class="cl-ring__value">38</span></div></div>
+            <div class="cl-ring cl-ring--warning" style="--val:81;--size:64px;--thick:6px"><div class="cl-ring__label"><span class="cl-ring__value">81</span></div></div>
+            <div class="cl-ring cl-ring--danger" style="--val:95;--size:64px;--thick:6px"><div class="cl-ring__label"><span class="cl-ring__value">95</span></div></div>
+            <span class="cl-spinner"></span><span class="cl-spinner cl-spinner--lg"></span>
+          </div>
+          <div class="sc-skel">
+            <span class="cl-skeleton cl-skeleton--circle" style="width:34px;height:34px"></span>
+            <div><span class="cl-skeleton" style="width:60%"></span><span class="cl-skeleton" style="width:90%;height:10px"></span></div>
+          </div>
+          <div class="sc-label">Toast</div>
+          <div class="cl-row">
+            <button class="cl-btn cl-btn--sm" type="button" data-toast="已刷新 9 只自选">普通</button>
+            <button class="cl-btn cl-btn--sm" type="button" data-toast="持仓已保存" data-type="success">成功</button>
+            <button class="cl-btn cl-btn--sm" type="button" data-toast="数据源响应慢，已切换备用源" data-type="warning">警告</button>
+            <button class="cl-btn cl-btn--sm" type="button" data-toast="已删除 国轩高科" data-type="danger" data-undo="1">可撤销</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 浮层 -->
+      <section class="cl-window sc-section" id="overlays">
+        <div class="sc-section__head"><h2>浮层</h2><code>.cl-menu .cl-dialog .cl-sheet .cl-drawer</code></div>
+        <div class="sc-section__body">
+          <div class="cl-row">
+            <button class="cl-btn cl-btn--primary" type="button" data-cl-open="#dlgPosition">持仓对话框</button>
+            <button class="cl-btn cl-btn--danger" type="button" data-cl-open="#dlgConfirm">确认删除</button>
+            <button class="cl-btn" type="button" data-cl-open="#sheetShare">底部抽屉</button>
+            <button class="cl-btn" type="button" data-cl-open="#drawerNotice">侧边抽屉</button>
+            <button class="cl-btn cl-btn--ghost" type="button" data-cl-menu="#menuSort" aria-haspopup="menu" aria-expanded="false">排序方式<svg class="i"><use href="#i-more"/></svg></button>
+          </div>
+          <div class="sc-menu-demo">
+            <div class="cl-menu cl-menu--static" role="menu" aria-label="菜单示例">
+              <div class="cl-menu__label">自选操作</div>
+              <button class="cl-menu__item" type="button" role="menuitem"><svg class="i"><use href="#i-pin"/></svg>置顶<span class="cl-menu__shortcut">Ctrl T</span></button>
+              <button class="cl-menu__item" type="button" role="menuitem"><svg class="i"><use href="#i-bell"/></svg>设置提醒</button>
+              <button class="cl-menu__item" type="button" role="menuitem" disabled><svg class="i"><use href="#i-chart"/></svg>加入回测</button>
+              <div class="cl-menu__sep"></div>
+              <button class="cl-menu__item cl-menu__item--danger" type="button" role="menuitem"><svg class="i"><use href="#i-trash"/></svg>删除</button>
+            </div>
+            <div class="sc-ctx-zone" id="ctxZone">在这里点右键<br>弹出右键菜单</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tokens -->
+      <section class="cl-window sc-section" id="tokens">
+        <div class="sc-section__head"><h2>设计 Token</h2><code>var(--…)</code></div>
+        <div class="sc-section__body">
+          <div class="sc-tokens" id="tokenGrid"></div>
+          <div class="cl-row" style="justify-content:space-between">
+            <span class="sc-label" style="margin:0">接入方式</span>
+            <button class="cl-btn cl-btn--sm cl-btn--ghost" type="button" id="btnCopyCode"><svg class="i"><use href="#i-copy"/></svg>复制</button>
+          </div>
+<pre class="sc-code" id="codeSample"><em>&lt;!-- 1. 引入 --&gt;</em>
+&lt;link rel="stylesheet" href="coolove-ui.css"&gt;
+&lt;script src="coolove-ui.js"&gt;&lt;/script&gt;
+
+<em>&lt;!-- 2. 根窗口 --&gt;</em>
+&lt;div class="<b>cl-window</b>"&gt;
+  &lt;header class="<b>cl-titlebar</b>"&gt;…&lt;/header&gt;
+  &lt;div class="<b>cl-window__body</b>"&gt;
+    &lt;div class="<b>cl-card</b>"&gt;…&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+<em>// 3. 调主题（Vue 里放进 settings store 的 watch）</em>
+CooloveUI.<b>applyTheme</b>({
+  theme: 'dark', opacity: 0.85, blur: 26,
+  accent: '#1d9bf0', trend: 'cn'
+})
+CooloveUI.<b>init</b>()</pre>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========== 浮层实例 ========== -->
+  <div class="cl-menu" id="menuSort" role="menu" hidden>
+    <div class="cl-menu__label">排序</div>
+    <button class="cl-menu__item" type="button" role="menuitemradio" data-group="sort" aria-checked="true">自定义顺序</button>
+    <button class="cl-menu__item" type="button" role="menuitemradio" data-group="sort" aria-checked="false">涨跌幅</button>
+    <button class="cl-menu__item" type="button" role="menuitemradio" data-group="sort" aria-checked="false">成交额</button>
+    <div class="cl-menu__sep"></div>
+    <button class="cl-menu__item" type="button" role="menuitemcheckbox" aria-checked="false">持仓优先</button>
+  </div>
+
+  <div class="cl-backdrop" id="dlgPosition" hidden>
+    <div class="cl-dialog" role="dialog" aria-modal="true" aria-labelledby="dpTitle">
+      <div class="cl-dialog__head">
+        <h3 class="cl-dialog__title" id="dpTitle">设置持仓 · 沃格光电</h3>
+        <button class="cl-close" type="button" data-cl-close aria-label="关闭"><svg class="i"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="cl-dialog__body cl-stack" style="gap:12px">
+        <div class="cl-row" style="flex-wrap:nowrap">
+          <div class="cl-field" style="flex:1"><label class="cl-field__label" for="dpCost">成本价</label><input class="cl-input cl-num" id="dpCost" value="68.400"></div>
+          <div class="cl-field" style="flex:1"><label class="cl-field__label" for="dpQty">股数</label><input class="cl-input cl-num" id="dpQty" value="240"></div>
+        </div>
+        <div class="cl-panel cl-panel--raised">
+          <dl class="cl-kv"><dt>持仓成本</dt><dd>16,416.00</dd><dt>当前市值</dt><dd>19,392.00</dd><dt>浮动盈亏</dt><dd class="cl-rise">+2,976.00 (+18.13%)</dd></dl>
+        </div>
+      </div>
+      <div class="cl-dialog__foot">
+        <button class="cl-btn cl-btn--ghost" type="button" data-cl-close>取消</button>
+        <button class="cl-btn cl-btn--primary" type="button" data-cl-close data-toast="持仓已保存" data-type="success">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cl-backdrop" id="dlgConfirm" hidden>
+    <div class="cl-dialog cl-dialog--sm" role="alertdialog" aria-modal="true" aria-labelledby="dcTitle">
+      <div class="cl-dialog__body" style="padding-top:18px">
+        <div class="cl-dialog__icon"><svg class="i"><use href="#i-trash"/></svg></div>
+        <h3 class="cl-dialog__title" id="dcTitle" style="margin-bottom:4px">删除 3 只自选股？</h3>
+        持仓记录和提醒会一并删除，此操作不能撤销。
+      </div>
+      <div class="cl-dialog__foot">
+        <button class="cl-btn cl-btn--ghost" type="button" data-cl-close>取消</button>
+        <button class="cl-btn cl-btn--danger-solid" type="button" data-cl-close data-toast="已删除 3 只自选股" data-type="danger">删除</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cl-backdrop cl-backdrop--sheet" id="sheetShare" hidden>
+    <div class="cl-sheet" role="dialog" aria-modal="true" aria-label="分享与导出">
+      <div class="cl-sheet__grip"></div>
+      <div class="cl-dialog__head"><h3 class="cl-dialog__title">分享与导出</h3><button class="cl-close" type="button" data-cl-close aria-label="关闭"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <div class="cl-dialog__body cl-list" style="padding-bottom:18px">
+        <button class="cl-card" type="button" data-cl-close data-toast="已复制自选列表"><span class="cl-card__icon"><svg class="i"><use href="#i-copy"/></svg></span><span class="cl-card__main"><span class="cl-card__info"><span class="cl-card__title">复制代码列表</span><span class="cl-card__sub">可粘贴到其他软件导入</span></span></span></button>
+        <button class="cl-card" type="button" data-cl-close data-toast="已导出 watchlist.csv" data-type="success"><span class="cl-card__icon"><svg class="i"><use href="#i-download"/></svg></span><span class="cl-card__main"><span class="cl-card__info"><span class="cl-card__title">导出 CSV</span><span class="cl-card__sub">含持仓成本与盈亏</span></span></span></button>
+        <button class="cl-card" type="button" data-cl-close data-toast="已生成长图"><span class="cl-card__icon"><svg class="i"><use href="#i-image"/></svg></span><span class="cl-card__main"><span class="cl-card__info"><span class="cl-card__title">生成长图</span><span class="cl-card__sub">隐藏金额后分享</span></span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cl-backdrop cl-backdrop--drawer" id="drawerNotice" hidden>
+    <div class="cl-drawer" role="dialog" aria-modal="true" aria-labelledby="dnTitle">
+      <div class="cl-dialog__head"><h3 class="cl-dialog__title" id="dnTitle">提醒</h3><button class="cl-close" type="button" data-cl-close aria-label="关闭"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <div class="cl-dialog__body cl-list">
+        <div class="cl-card cl-card--static"><span class="cl-dot cl-dot--accent"></span><div class="cl-card__main"><div class="cl-card__info"><div class="cl-card__title">澳弘电子 涨停</div><div class="cl-card__sub">14:02 · 封单 3.2 万手</div></div></div></div>
+        <div class="cl-card cl-card--static"><span class="cl-dot cl-dot--warn"></span><div class="cl-card__main"><div class="cl-card__info"><div class="cl-card__title">超声电子 跌幅超 5%</div><div class="cl-card__sub">10:41 · 触发你设置的阈值</div></div></div></div>
+        <div class="cl-card cl-card--static"><span class="cl-dot"></span><div class="cl-card__main"><div class="cl-card__info"><div class="cl-card__title">基金净值已更新</div><div class="cl-card__sub">昨天 21:30 · 7 只</div></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cl-window sc-dock cl-scope" id="dock" aria-label="快速调节">
+  <svg class="i" style="color:var(--text-muted)"><use href="#i-drive"/></svg>
+  <input class="cl-range js-opacity" id="dockOpacity" type="range" min="0" max="100" value="85" aria-label="背景不透明度">
+  <span class="sc-dock__val js-opacity-val">85%</span>
+  <button class="cl-iconbtn" type="button" id="dockTheme" aria-label="切换深浅色"><svg class="i"><use href="#i-moon"/></svg></button>
+</div>
+
+<script src="coolove-ui.js"></script>
+<script>
+(function () {
+  var desk = document.getElementById('desk')
+  var dock = document.getElementById('dock')
+  var $ = function (s, r) { return (r || document).querySelector(s) }
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)) }
+
+  /* ---------- 壁纸 ---------- */
+  var WALLS = {
+    aurora: 'radial-gradient(60% 50% at 18% 22%, #1fb6a6 0%, transparent 60%), radial-gradient(50% 55% at 82% 18%, #6d4aff 0%, transparent 62%), radial-gradient(70% 60% at 60% 92%, #1d4ed8 0%, transparent 60%), linear-gradient(160deg, #070b18, #0d1330 55%, #081022)',
+    dusk: 'radial-gradient(55% 50% at 80% 25%, #ff7a59 0%, transparent 60%), radial-gradient(60% 60% at 15% 80%, #c026d3 0%, transparent 62%), radial-gradient(50% 45% at 40% 10%, #f59e0b 0%, transparent 60%), linear-gradient(170deg, #1b0b2e, #3b0d3a 50%, #160a24)',
+    mist: 'radial-gradient(55% 55% at 15% 20%, #bae6fd 0%, transparent 60%), radial-gradient(55% 50% at 85% 30%, #fbcfe8 0%, transparent 60%), radial-gradient(70% 60% at 50% 95%, #c7d2fe 0%, transparent 60%), linear-gradient(160deg, #eef2ff, #f8fafc 50%, #ecfeff)',
+    meadow: 'radial-gradient(60% 55% at 20% 75%, #84cc16 0%, transparent 60%), radial-gradient(55% 50% at 80% 25%, #22d3ee 0%, transparent 60%), radial-gradient(45% 45% at 55% 50%, #fde68a 0%, transparent 60%), linear-gradient(160deg, #ecfccb, #d1fae5 50%, #e0f2fe)',
+    graphite: 'radial-gradient(70% 60% at 50% 0%, #334155 0%, transparent 70%), repeating-linear-gradient(90deg, rgba(148,163,184,.10) 0 1px, transparent 1px 48px), repeating-linear-gradient(0deg, rgba(148,163,184,.10) 0 1px, transparent 1px 48px), linear-gradient(180deg, #0f172a, #020617)'
+  }
+  var WALL_NAMES = { aurora: '极光', dusk: '暮色', mist: '晨雾', meadow: '春野', graphite: '石墨' }
+
+  var wallBox = $('#ctlWall')
+  Object.keys(WALLS).forEach(function (k) {
+    var b = document.createElement('button')
+    b.type = 'button'
+    b.className = 'sc-wall-btn'
+    b.style.setProperty('--thumb', WALLS[k])
+    b.dataset.value = k
+    b.setAttribute('aria-label', WALL_NAMES[k])
+    b.setAttribute('data-tip', WALL_NAMES[k])
+    wallBox.appendChild(b)
+  })
+  var up = document.createElement('button')
+  up.type = 'button'
+  up.className = 'sc-wall-btn sc-wall-btn--upload'
+  up.setAttribute('aria-label', '使用自己的图片')
+  up.setAttribute('data-tip', '用自己的图')
+  up.innerHTML = '<svg class="i"><use href="#i-upload"/></svg>'
+  wallBox.appendChild(up)
+  var customWall = null
+
+  /* ---------- 状态 ---------- */
+  var prefersDark = document.documentElement.getAttribute('data-theme')
+    ? document.documentElement.getAttribute('data-theme') === 'dark'
+    : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)
+
+  var DEFAULT = {
+    theme: prefersDark ? 'dark' : 'light',
+    opacity: 0.85, blur: 26, accent: '#1d9bf0',
+    customBg: '#1f2937', customFg: '#ffffff',
+    radius: 1, density: 'comfortable', trend: 'cn', overlay: 'solid',
+    wall: prefersDark ? 'aurora' : 'mist', candles: true
+  }
+  var S = Object.assign({}, DEFAULT)
+  try {
+    var saved = JSON.parse(localStorage.getItem('coolove-ui-showcase') || 'null')
+    if (saved && typeof saved === 'object') S = Object.assign(S, saved)
+    if (S.wall === 'custom') S.wall = DEFAULT.wall
+  } catch (e) {}
+
+  function save() { try { localStorage.setItem('coolove-ui-showcase', JSON.stringify(S)) } catch (e) {} }
+
+  function setPressed(box, value) {
+    $$('[data-value]', box).forEach(function (b) { b.setAttribute('aria-pressed', String(String(b.dataset.value) === String(value))) })
+  }
+
+  function apply() {
+    CooloveUI.applyTheme({
+      theme: S.theme, opacity: S.opacity, blur: S.blur, accent: S.accent,
+      customBg: S.customBg, customFg: S.customFg, radius: S.radius,
+      density: S.density, trend: S.trend, overlay: S.overlay
+    }, desk)
+    // 底部小控件也在 token 作用域里
+    ;['data-theme', 'data-trend', 'data-overlay', 'data-density', 'style'].forEach(function (a) {
+      var v = desk.getAttribute(a); if (v != null) dock.setAttribute(a, v)
+    })
+
+    setPressed($('#ctlTheme'), S.theme)
+    setPressed($('#ctlRadius'), S.radius)
+    setPressed($('#ctlDensity'), S.density)
+    setPressed($('#ctlTrend'), S.trend)
+    setPressed($('#ctlAccent'), S.accent)
+    setPressed(wallBox, S.wall)
+    $('#customPanel').hidden = S.theme !== 'custom'
+    $('#ctlCustomBg').value = S.customBg
+    $('#ctlCustomFg').value = S.customFg
+    $('#customBgHex').textContent = S.customBg.toUpperCase()
+    $('#customFgHex').textContent = S.customFg.toUpperCase()
+    $('#ctlAccentCustom').value = S.accent
+    $('#ctlBlur').value = S.blur
+    $('#blurVal').textContent = S.blur + 'px'
+    $('#ctlOverlay').checked = S.overlay === 'glass'
+    $('#ctlCandles').checked = S.candles
+    $$('.js-opacity').forEach(function (r) { r.value = Math.round(S.opacity * 100); CooloveUI.syncRange(r) })
+    $$('.js-opacity-val').forEach(function (s) { s.textContent = Math.round(S.opacity * 100) + '%' })
+    CooloveUI.syncRange($('#ctlBlur'))
+    $('#dockTheme use').setAttribute('href', S.theme === 'light' ? '#i-sun' : '#i-moon')
+
+    document.getElementById('wall').style.setProperty('--wall', S.wall === 'custom' && customWall ? 'center / cover no-repeat url("' + customWall + '")' : WALLS[S.wall] || WALLS.aurora)
+    drawCandles()
+    renderTokens()
+    save()
+  }
+
+  /* ---------- 设置控件 ---------- */
+  desk.addEventListener('cl:change', function (e) {
+    var box = e.target
+    var v = e.detail.value
+    if (box.id === 'ctlTheme') S.theme = v
+    else if (box.id === 'ctlRadius') S.radius = Number(v)
+    else if (box.id === 'ctlDensity') S.density = v
+    else if (box.id === 'ctlTrend') { S.trend = v; refreshStockTones() }
+    else return
+    apply()
+  })
+  $('#ctlAccent').addEventListener('click', function (e) {
+    var b = e.target.closest('.cl-swatch'); if (!b) return
+    S.accent = b.dataset.value; apply()
+  })
+  $('#ctlAccentCustom').addEventListener('input', function (e) { S.accent = e.target.value; apply() })
+  $('#ctlCustomBg').addEventListener('input', function (e) { S.customBg = e.target.value; apply() })
+  $('#ctlCustomFg').addEventListener('input', function (e) { S.customFg = e.target.value; apply() })
+  document.addEventListener('input', function (e) {
+    if (e.target.classList && e.target.classList.contains('js-opacity')) { S.opacity = Number(e.target.value) / 100; apply() }
+  })
+  $('#ctlBlur').addEventListener('input', function (e) { S.blur = Number(e.target.value); apply() })
+  $('#ctlOverlay').addEventListener('change', function (e) { S.overlay = e.target.checked ? 'glass' : 'solid'; apply() })
+  $('#ctlCandles').addEventListener('change', function (e) { S.candles = e.target.checked; apply() })
+  wallBox.addEventListener('click', function (e) {
+    var b = e.target.closest('.sc-wall-btn'); if (!b) return
+    if (b.classList.contains('sc-wall-btn--upload')) { $('#wallFile').click(); return }
+    S.wall = b.dataset.value; apply()
+  })
+  $('#wallFile').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) return
+    var rd = new FileReader()
+    rd.onload = function () { customWall = rd.result; S.wall = 'custom'; S.candles = false; apply(); CooloveUI.toast('已换成你的图片，调低不透明度看看效果') }
+    rd.readAsDataURL(f)
+  })
+  $('#btnReset').addEventListener('click', function () { S = Object.assign({}, DEFAULT); refreshStockTones(); apply(); CooloveUI.toast('已恢复默认外观') })
+  $('#dockTheme').addEventListener('click', function () { S.theme = S.theme === 'light' ? 'dark' : 'light'; apply() })
+
+  function copy(text, okMsg) {
+    var done = function () { CooloveUI.toast(okMsg, { type: 'success' }) }
+    try {
+      navigator.clipboard.writeText(text).then(done, function () { fallback() })
+    } catch (e) { fallback() }
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'
+      document.body.appendChild(ta); ta.select()
+      try { document.execCommand('copy'); done() } catch (e) { CooloveUI.toast('复制失败，请手动选择文本', { type: 'warning' }) }
+      ta.remove()
+    }
+  }
+  $('#btnCopyCfg').addEventListener('click', function () {
+    var cfg = { theme: S.theme, opacity: S.opacity, blur: S.blur, accent: S.accent, radius: S.radius, density: S.density, trend: S.trend, overlay: S.overlay }
+    if (S.theme === 'custom') { cfg.customBg = S.customBg; cfg.customFg = S.customFg }
+    copy('CooloveUI.applyTheme(' + JSON.stringify(cfg, null, 2) + ')', '已复制当前配置')
+  })
+  $('#btnCopyCode').addEventListener('click', function () { copy($('#codeSample').textContent, '已复制接入代码') })
+
+  /* ---------- 背景 K 线 ---------- */
+  var candleSeed = []
+  function seedCandles() {
+    candleSeed = []
+    var p = 100
+    for (var i = 0; i < 160; i++) {
+      var o = p, c = p + (Math.random() - 0.48) * 6
+      var h = Math.max(o, c) + Math.random() * 3, l = Math.min(o, c) - Math.random() * 3
+      candleSeed.push([o, h, l, c]); p = c
+    }
+  }
+  seedCandles()
+  function drawCandles() {
+    var cv = document.getElementById('candles')
+    var dpr = window.devicePixelRatio || 1
+    var W = window.innerWidth, H = window.innerHeight
+    cv.width = W * dpr; cv.height = H * dpr
+    var ctx = cv.getContext('2d')
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, W, H)
+    if (!S.candles) return
+    var light = S.wall === 'mist' || S.wall === 'meadow'
+    var up = S.trend === 'cn' ? '#ef4444' : '#22c55e'
+    var down = S.trend === 'cn' ? '#22c55e' : '#ef4444'
+    var step = 22, n = Math.min(candleSeed.length, Math.ceil(W / step) + 1)
+    var data = candleSeed.slice(0, n)
+    var lo = Infinity, hi = -Infinity
+    data.forEach(function (d) { lo = Math.min(lo, d[2]); hi = Math.max(hi, d[1]) })
+    var top = H * 0.18, bottom = H * 0.82
+    var y = function (v) { return bottom - (v - lo) / (hi - lo || 1) * (bottom - top) }
+    ctx.globalAlpha = light ? 0.5 : 0.42
+    data.forEach(function (d, i) {
+      var x = i * step + 8, isUp = d[3] >= d[0]
+      ctx.strokeStyle = ctx.fillStyle = isUp ? up : down
+      ctx.lineWidth = 1.5
+      ctx.beginPath(); ctx.moveTo(x + 6, y(d[1])); ctx.lineTo(x + 6, y(d[2])); ctx.stroke()
+      var yy = Math.min(y(d[0]), y(d[3])), hh = Math.max(2, Math.abs(y(d[0]) - y(d[3])))
+      ctx.fillRect(x, yy, 12, hh)
+    })
+    // 均线
+    ctx.globalAlpha = light ? 0.55 : 0.5
+    ctx.strokeStyle = light ? '#1e293b' : '#e2e8f0'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    data.forEach(function (d, i) {
+      var s = data.slice(Math.max(0, i - 9), i + 1), m = s.reduce(function (a, b) { return a + b[3] }, 0) / s.length
+      var x = i * step + 14
+      i ? ctx.lineTo(x, y(m)) : ctx.moveTo(x, y(m))
+    })
+    ctx.stroke()
+    ctx.globalAlpha = 1
+  }
+  var rT; window.addEventListener('resize', function () { clearTimeout(rT); rT = setTimeout(drawCandles, 120) })
+
+  /* ---------- Token 网格 ---------- */
+  var TOKENS = ['--window-bg', '--solid-bg', '--surface-1', '--surface-2', '--surface-3', '--border-color', '--text-primary', '--text-secondary', '--text-muted', '--accent', '--accent-soft', '--rise', '--rise-soft', '--fall', '--fall-soft', '--warning']
+  function renderTokens() {
+    var grid = $('#tokenGrid')
+    if (!grid.children.length) {
+      grid.innerHTML = TOKENS.map(function (t) {
+        return '<div class="sc-token"><i style="--sw:linear-gradient(var(' + t + '),var(' + t + '))"></i><span>' + t + '</span></div>'
+      }).join('')
+    }
+  }
+
+  /* ---------- 自选股小部件（示例数据） ---------- */
+  var POOL = [
+    ['巨人网络', '002558', 21.94], ['国轩高科', '002074', 31.30], ['沃格光电', '603773', 80.80], ['超声电子', '000823', 22.71],
+    ['有研新材', '600206', 44.64], ['长江材料', '001296', 19.29], ['立新能源', '001258', 10.11], ['澳弘电子', '605058', 48.50],
+    ['美诺华', '603538', 29.46], ['中际旭创', '300308', 142.30], ['北方华创', '002371', 398.20], ['宁德时代', '300750', 251.60]
+  ]
+  var stocks = POOL.slice(0, 9).map(function (p, i) {
+    var pct = [4.01, -2.84, -4.83, -6.08, 7.41, -0.05, -0.30, 10.0, -3.43][i]
+    return makeStock(p, pct)
+  })
+  function makeStock(p, pct) {
+    var prev = p[2]
+    var pts = [], v = prev, target = prev * (1 + pct / 100)
+    for (var k = 0; k < 40; k++) { v += (target - v) / (40 - k) + (Math.random() - 0.5) * prev * 0.004; pts.push(v) }
+    pts[pts.length - 1] = target
+    return { name: p[0], code: p[1], prev: prev, price: target, pts: pts }
+  }
+  var showSpark = true
+  var list = $('#stockList')
+  function stockCardHTML(s, i) {
+    return '<div class="cl-card" tabindex="0" role="button" data-i="' + i + '">' +
+      '<button class="cl-card__handle" type="button" aria-label="拖动排序" tabindex="-1"><span></span><span></span><span></span></button>' +
+      '<div class="cl-card__main"><div class="cl-card__info"><div class="cl-card__title">' + s.name + '</div><div class="cl-card__sub">' + s.code + '</div></div>' +
+      (showSpark ? '<div class="sc-spark"><svg></svg></div>' : '') + '</div>' +
+      '<div class="cl-card__side"><span class="cl-pill"></span><span class="cl-card__value"></span></div>' +
+      '<button class="cl-card__remove" type="button" aria-label="删除 ' + s.name + '"><svg class="i"><use href="#i-x"/></svg></button></div>'
+  }
+  function renderStocks() {
+    if (!stocks.length) {
+      list.innerHTML = '<div class="cl-empty" style="flex:1"><div class="cl-empty__icon"><svg class="i"><use href="#i-star"/></svg></div><div class="cl-empty__title">还没有自选股</div><div class="cl-empty__desc">在下方搜索框输入代码或名称添加。</div></div>'
+      return
+    }
+    list.innerHTML = stocks.map(stockCardHTML).join('')
+    refreshStockTones()
+  }
+  function refreshStockTones(flash) {
+    $$('.cl-card', list).forEach(function (card) {
+      var s = stocks[Number(card.dataset.i)]; if (!s) return
+      var pct = (s.price / s.prev - 1) * 100
+      var pill = $('.cl-pill', card)
+      var cls = 'cl-pill' + (pct > 0.004 ? ' cl-pill--rise' : pct < -0.004 ? ' cl-pill--fall' : '')
+      pill.className = cls
+      pill.textContent = (pct > 0 ? '+' : '') + pct.toFixed(2) + '%'
+      if (flash && flash.indexOf(s) >= 0) { pill.classList.remove('is-flash'); void pill.offsetWidth; pill.classList.add('is-flash') }
+      $('.cl-card__value', card).textContent = s.price.toFixed(2)
+      var svg = $('svg', $('.sc-spark', card) || document.createElement('div'))
+      if (svg) CooloveUI.sparkline(svg, s.pts, { reference: s.prev })
+    })
+  }
+  list.addEventListener('click', function (e) {
+    var rm = e.target.closest('.cl-card__remove')
+    var card = e.target.closest('.cl-card'); if (!card) return
+    var s = stocks[Number(card.dataset.i)]
+    if (rm) {
+      var idx = stocks.indexOf(s)
+      stocks.splice(idx, 1); renderStocks()
+      CooloveUI.toast('已删除 ' + s.name, { type: 'danger', action: { label: '撤销', onClick: function () { stocks.splice(idx, 0, s); renderStocks() } } })
+      return
+    }
+    $$('.cl-card', list).forEach(function (c) { c.classList.toggle('is-selected', c === card) })
+  })
+  list.addEventListener('contextmenu', function (e) {
+    var card = e.target.closest('.cl-card'); if (!card) return
+    var s = stocks[Number(card.dataset.i)]
+    CooloveUI.contextMenu(e, [
+      { label: '置顶', icon: '<svg class="i"><use href="#i-pin"/></svg>', onClick: function () { stocks.splice(stocks.indexOf(s), 1); stocks.unshift(s); renderStocks(); CooloveUI.toast('已置顶 ' + s.name) } },
+      { label: '设置持仓', icon: '<svg class="i"><use href="#i-box"/></svg>', onClick: function () { CooloveUI.openDialog('#dlgPosition') } },
+      { label: '设置提醒', icon: '<svg class="i"><use href="#i-bell"/></svg>', onClick: function () { CooloveUI.toast(s.name + ' 涨跌超 5% 时提醒', { type: 'success' }) } },
+      'sep',
+      { label: '删除', danger: true, icon: '<svg class="i"><use href="#i-trash"/></svg>', onClick: function () { stocks.splice(stocks.indexOf(s), 1); renderStocks(); CooloveUI.toast('已删除 ' + s.name, { type: 'danger' }) } }
+    ])
+  })
+
+  function pad(n) { return n < 10 ? '0' + n : String(n) }
+  function tick() {
+    var moved = []
+    stocks.forEach(function (s) {
+      if (Math.random() < 0.45) {
+        var cap = s.prev * 1.1, floor = s.prev * 0.9
+        s.price = Math.min(cap, Math.max(floor, s.price * (1 + (Math.random() - 0.5) * 0.006)))
+        s.pts.push(s.price); if (s.pts.length > 60) s.pts.shift()
+        moved.push(s)
+      }
+    })
+    refreshStockTones(moved)
+    var d = new Date()
+    $('#clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds())
+  }
+  renderStocks()
+  setInterval(tick, 3000)
+  tick()
+
+  $('#btnRefresh').addEventListener('click', function (e) {
+    var b = e.currentTarget
+    b.classList.add('is-spinning')
+    setTimeout(function () { b.classList.remove('is-spinning'); tick(); CooloveUI.toast('已刷新 ' + stocks.length + ' 只自选') }, 700)
+  })
+  $('#assetToggle').addEventListener('click', function (e) {
+    e.currentTarget.textContent = e.currentTarget.textContent === 'Stock Assistant' ? 'Fund Assistant' : 'Stock Assistant'
+  })
+  $('#wqSpark').addEventListener('change', function (e) { showSpark = e.target.checked; renderStocks() })
+
+  // 搜索（两个搜索框共用）
+  function bindSearch(input, box, onPick) {
+    function render() {
+      var q = input.value.trim()
+      if (!q) { box.hidden = true; return }
+      var hits = POOL.filter(function (p) { return p[0].indexOf(q) >= 0 || p[1].indexOf(q) >= 0 }).slice(0, 5)
+      box.innerHTML = hits.length
+        ? hits.map(function (p) { return '<button class="cl-search__item" type="button" data-code="' + p[1] + '"><span class="cl-search__name">' + p[0].replace(q, '<mark>' + q + '</mark>') + '</span><span class="cl-search__code">' + p[1] + '</span></button>' }).join('')
+        : '<div class="cl-empty" style="padding:12px"><div class="cl-empty__desc">没有找到“' + q.replace(/[<>&"]/g, '') + '”</div></div>'
+      box.hidden = false
+    }
+    input.addEventListener('input', render)
+    input.addEventListener('focus', render)
+    input.addEventListener('blur', function () { setTimeout(function () { box.hidden = true }, 120) })
+    box.addEventListener('mousedown', function (e) {
+      var it = e.target.closest('.cl-search__item'); if (!it) return
+      e.preventDefault()
+      onPick(POOL.filter(function (p) { return p[1] === it.dataset.code })[0])
+      input.value = ''; box.hidden = true; input.blur()
+    })
+  }
+  bindSearch($('#stockSearchInput'), $('#stockSearchResults'), function (p) {
+    if (stocks.some(function (s) { return s.code === p[1] })) { CooloveUI.toast(p[0] + ' 已在自选中', { type: 'warning' }); return }
+    stocks.push(makeStock(p, (Math.random() - 0.45) * 8)); renderStocks()
+    list.scrollTop = list.scrollHeight
+    CooloveUI.toast('已添加 ' + p[0], { type: 'success' })
+  })
+  bindSearch($('#fSearch'), $('#fSearchResults'), function (p) { CooloveUI.toast('选中 ' + p[0] + ' ' + p[1]) })
+  $('#fSearch').setAttribute('placeholder', '试试输入“电”或“300”')
+
+  /* ---------- 磁盘清理 ---------- */
+  var JUNK = [
+    ['系统临时文件', 'C:\\Windows\\Temp', 2.41, 'i-file', true],
+    ['浏览器缓存', 'Edge · Chrome', 1.86, 'i-globe', true],
+    ['Windows 更新残留', 'SoftwareDistribution', 1.32, 'i-box', true],
+    ['回收站', '214 个项目', 0.78, 'i-trash', false],
+    ['npm / pip 缓存', 'D:\\Code 下 6 个项目', 3.10, 'i-folder', false]
+  ]
+  function fmtGB(g) { return g >= 1 ? g.toFixed(2) + ' GB' : Math.round(g * 1024) + ' MB' }
+  function renderJunk() {
+    $('#tabJunk').innerHTML = JUNK.map(function (j, i) {
+      return '<label class="cl-card" for="junk' + i + '"><span class="cl-check"><input type="checkbox" id="junk' + i + '"' + (j[4] ? ' checked' : '') + '></span>' +
+        '<span class="cl-card__icon"><svg class="i"><use href="#' + j[3] + '"/></svg></span>' +
+        '<span class="cl-card__main"><span class="cl-card__info"><span class="cl-card__title">' + j[0] + '</span><span class="cl-card__sub">' + j[1] + '</span></span></span>' +
+        '<span class="sc-size">' + fmtGB(j[2]) + '</span></label>'
+    }).join('')
+    sumJunk()
+  }
+  function sumJunk() {
+    var total = 0, n = 0
+    JUNK.forEach(function (j, i) { var c = $('#junk' + i); j[4] = c && c.checked; if (j[4]) { total += j[2]; n++ } })
+    $('#selSize').textContent = total ? fmtGB(total) : '0 B'
+    $('#selCount').textContent = n
+    $('#btnClean').disabled = !n
+  }
+  $('#tabJunk').addEventListener('change', sumJunk)
+  renderJunk()
+
+  var used = 171.6, total = 238.4
+  $('#btnClean').addEventListener('click', function () {
+    var btn = this, bar = $('#cleanProgress'), freed = 0
+    JUNK.forEach(function (j) { if (j[4]) freed += j[2] })
+    btn.classList.add('is-loading'); $('#btnRescan').disabled = true
+    bar.hidden = false; bar.style.setProperty('--val', 0)
+    $('#scanBadge').className = 'cl-badge cl-badge--warning'; $('#scanBadge').innerHTML = '<span class="cl-spinner" style="width:10px;height:10px;border-width:1.5px"></span>清理中'
+    var v = 0
+    var t = setInterval(function () {
+      v = Math.min(100, v + 6 + Math.random() * 10); bar.style.setProperty('--val', v)
+      if (v >= 100) {
+        clearInterval(t)
+        used = Math.max(120, used - freed)
+        var pct = Math.round(used / total * 100)
+        $('#diskRing').style.setProperty('--val', pct); $('#diskPct').textContent = pct + '%'
+        $('#diskRing').setAttribute('aria-label', 'C 盘已用 ' + pct + '%')
+        $('#diskUsed').textContent = used.toFixed(1) + ' / ' + total + ' GB'
+        $('#meterJunk').style.setProperty('--w', 1)
+        JUNK = JUNK.filter(function (j) { return !j[4] })
+        renderJunk()
+        $('.cl-count', $('[aria-controls="tabJunk"]')).textContent = JUNK.length
+        btn.classList.remove('is-loading'); $('#btnRescan').disabled = false
+        setTimeout(function () { bar.hidden = true }, 400)
+        $('#scanBadge').className = 'cl-badge cl-badge--success'; $('#scanBadge').innerHTML = '<span class="cl-dot cl-dot--live"></span>已清理'
+        CooloveUI.toast('已释放 ' + fmtGB(freed), { type: 'success' })
+      }
+    }, 160)
+  })
+  $('#btnRescan').addEventListener('click', function () {
+    var b = this; b.classList.add('is-loading')
+    setTimeout(function () {
+      b.classList.remove('is-loading')
+      JUNK.push(['缩略图缓存', 'Explorer thumbcache', 0.34, 'i-image', true])
+      renderJunk(); $('.cl-count', $('[aria-controls="tabJunk"]')).textContent = JUNK.length
+      CooloveUI.toast('扫描完成，发现 ' + JUNK.length + ' 类可清理项')
+    }, 1100)
+  })
+
+  /* ---------- 画廊交互 ---------- */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-toast]'); if (!t) return
+    var opts = { type: t.dataset.type }
+    if (t.dataset.undo) opts.action = { label: '撤销', onClick: function () { CooloveUI.toast('已恢复 国轩高科', { type: 'success' }) } }
+    CooloveUI.toast(t.dataset.toast, opts)
+  })
+  $('#btnLoading').addEventListener('click', function () {
+    var b = this; b.classList.add('is-loading')
+    setTimeout(function () { b.classList.remove('is-loading'); CooloveUI.toast('加载完成', { type: 'success' }) }, 1400)
+  })
+  $('.js-indeterminate').indeterminate = true
+  $('#fThreshold').addEventListener('input', function (e) { $('#thVal').textContent = '±' + e.target.value + '%' })
+  $('#ctxZone').addEventListener('contextmenu', function (e) {
+    CooloveUI.contextMenu(e, [
+      { label: '复制', shortcut: 'Ctrl C', icon: '<svg class="i"><use href="#i-copy"/></svg>', onClick: function () { CooloveUI.toast('已复制') } },
+      { label: '导出图片', icon: '<svg class="i"><use href="#i-download"/></svg>', onClick: function () { CooloveUI.toast('已导出', { type: 'success' }) } },
+      { label: '加入回测', disabled: true },
+      'sep',
+      { label: '清空', danger: true, icon: '<svg class="i"><use href="#i-trash"/></svg>', onClick: function () { CooloveUI.toast('已清空', { type: 'danger' }) } }
+    ])
+  })
+
+  // 柱状图
+  var bars = $('#barsDemo')
+  for (var i = 0; i < 20; i++) {
+    var b = document.createElement('i'); var h = 25 + Math.random() * 75
+    b.style.setProperty('--h', h.toFixed(0)); b.className = Math.random() > 0.45 ? 'is-rise' : 'is-fall'
+    if (i < 14) b.classList.add('is-dim')
+    bars.appendChild(b)
+  }
+
+  // 表格排序
+  $$('#sortTable th.is-sortable').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var k = Number(th.dataset.k)
+      var dir = th.getAttribute('aria-sort') === 'descending' ? 'ascending' : 'descending'
+      $$('#sortTable th').forEach(function (h) { h.removeAttribute('aria-sort') })
+      th.setAttribute('aria-sort', dir)
+      var body = $('#sortTable tbody')
+      var rows = $$('tr', body)
+      rows.sort(function (a, b) {
+        var x = a.children[k].textContent, y = b.children[k].textContent
+        var nx = parseFloat(x), ny = parseFloat(y)
+        var c = isNaN(nx) ? x.localeCompare(y, 'zh') : nx - ny
+        return dir === 'ascending' ? c : -c
+      })
+      rows.forEach(function (r) { body.appendChild(r) })
+    })
+  })
+
+  // 实时进度条
+  var lp = 30
+  setInterval(function () { lp = lp >= 100 ? 8 : lp + 7; $('#liveProgress').style.setProperty('--val', lp) }, 700)
+
+  $('#compCount').textContent = '40+'
+
+  desk.addEventListener('cl:open', function () { dock.style.visibility = 'hidden' })
+  desk.addEventListener('cl:close', function () { dock.style.visibility = '' })
+
+  CooloveUI.configure({ root: desk })
+  CooloveUI.init(document)
+  apply()
+})()
+</script>
