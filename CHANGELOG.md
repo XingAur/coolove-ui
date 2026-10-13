@@ -9,6 +9,10 @@
 - 新增 `.cl-stat--md`（行情磁贴：12px 标题、17px 数值）与 `.cl-stat__arrow`（数值前的 ▲▼）。
 - 新增 `.cl-card--row`（无最小高度的紧凑数据行，排名/持仓对照）与 `.cl-card.is-active`（强调色高亮行）。
 - 新增 `.cl-section-head`（小节标题 + `__sub` 副标题，右侧操作自动靠右，`--lg` 大号）与 `.cl-hint`（10px 说明文字）。
+- 新增 `.cl-actionbar` / `__item`（详情页底部“图标 + 文字”操作栏，内置更多菜单定位）。
+- 新增 `.cl-table--compact` 与 `.cl-table-wrap--plain`（面板内的 10px 明细表）。
+- `.cl-eyebrow` 改为块级，始终独占标题上方一行（与行内标题同排时不再挤在一起）。
+- 新增 `.cl-divided`（子元素间 1px 分隔线，`--soft` 更淡）。
 
 ## 0.3.0
 
