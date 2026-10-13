@@ -76,7 +76,6 @@
   .sc-widget { width: 280px; max-width: 100%; height: 500px; flex-shrink: 0; }
   .sc-widget .cl-window__body { scrollbar-width: none; }
   .sc-widget .cl-window__body::-webkit-scrollbar { display: none; }
-  .sc-spark { flex: 1; min-width: 0; max-width: 110px; height: 18px; }
   .sc-cleaner { flex: 1 1 360px; min-width: 0; height: 500px; }
   .sc-cleaner .cl-window__body { padding: 12px 14px; gap: 12px; }
   .sc-disk { display: flex; align-items: center; gap: 16px; }
@@ -653,17 +652,17 @@
             <div class="cl-card is-selected" tabindex="0" role="button">
               <div class="cl-card__main">
                 <div class="cl-card__info"><div class="cl-card__title">沃格光电</div><div class="cl-card__sub">603773</div></div>
-                <div class="sc-spark"><svg data-cl-spark="76.2,77.1,78.4,77.9,79.3,80.1,79.6,80.8" data-ref="77.4"></svg></div>
+                <div class="cl-card__chart"><svg data-cl-spark="76.2,77.1,78.4,77.9,79.3,80.1,79.6,80.8" data-ref="77.4"></svg></div>
               </div>
               <div class="cl-card__side"><span class="cl-pill cl-pill--rise">+4.38%</span><span class="cl-card__value">80.80</span></div>
-              <div class="cl-card__strip cl-rise"><span>成本 16,420.00</span><span>市值 19,392.00</span><strong class="cl-rise">盈亏 +2,972.00 / +18.10%</strong></div>
+              <div class="cl-card__strip is-rise"><span>成本 16,420.00</span><span>市值 19,392.00</span><strong>盈亏 +2,972.00 / +18.10%</strong></div>
             </div>
             <div class="cl-card" tabindex="0" role="button">
-              <div class="cl-card__main" style="flex-direction:column;align-items:stretch;gap:5px">
+              <div class="cl-card__main cl-card__main--stack">
                 <div class="cl-card__title">华夏国证半导体芯片ETF联接C</div>
-                <div class="cl-row" style="gap:8px;flex-wrap:nowrap"><span class="cl-card__sub">008887</span><div class="sc-spark" style="max-width:none"><svg data-cl-spark="1.79,1.785,1.776,1.781,1.772,1.768,1.762,1.759" data-ref="1.776"></svg></div></div>
+                <div class="cl-card__row"><span class="cl-card__sub">008887</span><div class="cl-card__chart"><svg data-cl-spark="1.79,1.785,1.776,1.781,1.772,1.768,1.762,1.759" data-ref="1.776"></svg></div></div>
               </div>
-              <div class="cl-card__side"><strong class="cl-fall cl-num" style="font-size:17px;font-weight:900">-0.96%</strong><span class="cl-card__value" style="font-size:12px">1.7590</span><span class="cl-muted" style="font-size:9px">估值 14:58</span></div>
+              <div class="cl-card__side"><strong class="cl-card__figure cl-card__figure--lg cl-fall">-0.96%</strong><span class="cl-card__value cl-card__value--sm">1.7590</span><span class="cl-card__meta is-estimate">估值 14:58</span></div>
             </div>
             <div class="cl-card cl-card--static">
               <div class="cl-card__icon"><svg class="i"><use href="#i-chart"/></svg></div>
@@ -1129,7 +1128,7 @@ CooloveUI.<b>init</b>()</pre>
     return '<div class="cl-card" tabindex="0" role="button" data-i="' + i + '">' +
       '<button class="cl-card__handle" type="button" aria-label="拖动排序" tabindex="-1"><span></span><span></span><span></span></button>' +
       '<div class="cl-card__main"><div class="cl-card__info"><div class="cl-card__title">' + s.name + '</div><div class="cl-card__sub">' + s.code + '</div></div>' +
-      (showSpark ? '<div class="sc-spark"><svg></svg></div>' : '') + '</div>' +
+      (showSpark ? '<div class="cl-card__chart"><svg></svg></div>' : '') + '</div>' +
       '<div class="cl-card__side"><span class="cl-pill"></span><span class="cl-card__value"></span></div>' +
       '<button class="cl-card__remove" type="button" aria-label="删除 ' + s.name + '"><svg class="i"><use href="#i-x"/></svg></button></div>'
   }
@@ -1151,7 +1150,7 @@ CooloveUI.<b>init</b>()</pre>
       pill.textContent = (pct > 0 ? '+' : '') + pct.toFixed(2) + '%'
       if (flash && flash.indexOf(s) >= 0) { pill.classList.remove('is-flash'); void pill.offsetWidth; pill.classList.add('is-flash') }
       $('.cl-card__value', card).textContent = s.price.toFixed(2)
-      var svg = $('svg', $('.sc-spark', card) || document.createElement('div'))
+      var svg = $('svg', $('.cl-card__chart', card) || document.createElement('div'))
       if (svg) CooloveUI.sparkline(svg, s.pts, { reference: s.prev })
     })
   }

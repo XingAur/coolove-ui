@@ -1,5 +1,5 @@
 /*!
- * Coolove UI —— 从 A+ 助手（stock-widget）提炼的可调透明度玻璃风格组件库
+ * Coolove UI v0.2.0 —— 从 A+ 助手（stock-widget）提炼的可调透明度玻璃风格组件库
  *
  * 核心理念（沿用原项目）：
  *   1. 窗口底色 = 主题底色 × --bg-opacity，配合 backdrop-filter 模糊，形成可调透明度的玻璃质感
@@ -367,6 +367,7 @@
   white-space: nowrap;
 }
 .cl-statusbar__time.is-delayed { color: var(--c-amber); }
+.cl-statusbar__time.is-stale { color: var(--warning); }
 
 /* 嵌入式玻璃面板（大窗口内的分区） */
 .cl-panel {
@@ -662,6 +663,26 @@
 .cl-search__name { font-size: var(--fs-md); font-weight: 600; }
 .cl-search__name mark { background: none; color: var(--accent-text); }
 .cl-search__code { font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+/* 搜索框上方的提示气泡（添加失败、识别中等） */
+.cl-search__message {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 31;
+  max-width: min(260px, calc(100vw - 20px));
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-bg);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  animation: cl-pop-in 0.12s ease;
+}
+.cl-search__message--danger { border-color: color-mix(in srgb, var(--c-red-strong) 32%, transparent); color: var(--c-err-text); }
+.cl-search__message--success { border-color: color-mix(in srgb, var(--c-green-strong) 32%, transparent); color: var(--c-green); }
+.cl-search__message--down { bottom: auto; top: calc(100% + 8px); }
 
 /* 数字步进器 */
 .cl-stepper {
@@ -1016,8 +1037,19 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
 
 /* ============================================================
  * 7. 列表卡片（自选股卡片的通用化）
+ *
+ * 设计约定（来自 A+ 助手 1.2.8 的紧凑列表）：
+ *   - 悬停/选中不改变卡片内部布局，名称与走势图位置保持不动
+ *   - 拖动柄、删除按钮浮在列表左右留白里（.cl-list 自带 10px 横向留白）
  * ============================================================ */
-.cl-list { display: flex; flex-direction: column; gap: 6px; }
+.cl-list {
+  --list-gutter: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-inline: var(--list-gutter);
+}
+.cl-list--flush { --list-gutter: 0px; }
 
 .cl-card {
   position: relative;
@@ -1034,9 +1066,11 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
   text-align: left;
   outline: none;
   cursor: pointer;
-  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
 }
-.cl-card:hover { background: var(--surface-2); transform: translateX(2px); }
+.cl-card:hover { background: var(--surface-2); }
+/* 可选：悬停轻推 2px（会移动内容，紧凑列表不建议） */
+.cl-card--nudge:hover { transform: translateX(2px); }
 .cl-card:focus-visible { border-color: var(--accent-ring); }
 .cl-card.is-selected {
   border-color: var(--border-color);
@@ -1051,24 +1085,39 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
   border-radius: var(--radius-pill);
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 70%, #fff), var(--accent));
 }
-.cl-card.is-dragging { opacity: 0.55; transform: scale(0.99); cursor: grabbing; }
+.cl-card.is-dragging { opacity: 0.55; cursor: grabbing; }
 .cl-card.is-drop-target { border-color: var(--accent-ring); background: var(--accent-soft); }
 .cl-card--static { cursor: default; }
-.cl-card--static:hover { transform: none; }
+.cl-card--tall { min-height: 54px; }
 
 .cl-card__main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.cl-card__info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cl-card__main--stack { flex-direction: column; align-items: stretch; gap: 4px; }
+.cl-card__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex-shrink: 0; }
+.cl-card__row { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .cl-card__title {
+  max-width: 116px;
   font-size: var(--fs-md);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.05;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.cl-card__main--stack .cl-card__title { max-width: none; font-weight: 650; }
 .cl-card__sub { font-size: var(--fs-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.cl-card__side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.cl-card__chart { flex: 1; min-width: 0; max-width: 120px; height: 20px; overflow: hidden; }
+.cl-card__side { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 .cl-card__value { font-size: var(--fs-md); font-weight: 500; line-height: 1; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.cl-card__value--sm { font-size: var(--fs-xs); }
+/* 卡片右侧的主数值（如基金当日涨幅），可配合 .cl-rise / .cl-fall */
+.cl-card__figure { font-size: var(--fs-md); font-weight: 650; line-height: 1; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.cl-card__figure.cl-rise { color: var(--rise); }
+.cl-card__figure.cl-fall { color: var(--fall); }
+.cl-card__figure--lg { font-size: 17px; font-weight: 900; }
+/* 极小的说明文字（板块、更新时间），.is-estimate 表示估算值 */
+.cl-card__meta { font-size: 9px; font-weight: 650; line-height: 1; color: var(--text-muted); white-space: nowrap; }
+.cl-card__meta.is-estimate { color: var(--c-amber); }
 .cl-card__icon {
   width: 30px;
   height: 30px;
@@ -1081,55 +1130,55 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
 }
 .cl-card__icon svg { width: 16px; height: 16px; }
 
-/* 悬停才出现的操作：拖动柄 / 删除 */
+/* 悬停才出现的操作：拖动柄 / 删除，浮在列表留白里，不挤占卡片内容 */
 .cl-card__handle,
 .cl-card__remove {
   position: absolute;
   top: 50%;
+  z-index: 2;
+  width: 20px;
+  height: 24px;
+  padding: 0;
   transform: translateY(-50%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease, background 0.12s ease;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
 }
 .cl-card:is(:hover, :focus-within, .is-dragging) :is(.cl-card__handle, .cl-card__remove) { opacity: 1; pointer-events: auto; }
 .cl-card__handle {
-  left: -6px;
-  width: 14px;
-  height: 24px;
-  padding: 0;
+  left: calc(-1 * var(--list-gutter, 10px));
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
   background: var(--solid-bg);
   color: var(--text-muted);
   cursor: grab;
+  touch-action: none;
 }
-.cl-card__handle span { width: 8px; height: 1.5px; border-radius: 2px; background: currentColor; }
+.cl-card__handle span { width: 10px; height: 1px; border-radius: 1px; background: currentColor; }
 .cl-card__handle:hover { color: var(--text-primary); }
+.cl-card__handle:active { cursor: grabbing; }
+.cl-card__handle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; opacity: 1; pointer-events: auto; }
 .cl-card__remove {
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  padding: 0;
+  right: calc(-1 * var(--list-gutter, 10px));
   display: inline-grid;
   place-items: center;
-  border: none;
-  border-radius: var(--radius-xs);
-  background: var(--c-red-soft);
+  border-color: color-mix(in srgb, var(--c-red-strong) 25%, transparent);
+  background: color-mix(in srgb, var(--c-red-strong) 14%, var(--solid-bg));
   color: var(--c-err-text);
-  cursor: pointer;
 }
-.cl-card__remove:hover { background: color-mix(in srgb, var(--c-red-strong) 24%, transparent); }
+.cl-card__remove:hover { background: color-mix(in srgb, var(--c-red-strong) 26%, var(--solid-bg)); }
 .cl-card__remove svg { width: 12px; height: 12px; }
-/* 有删除按钮的卡片，悬停时右侧让出位置（与原项目一致） */
-.cl-card:has(> .cl-card__remove) { transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, padding 0.18s ease; }
-.cl-card:has(> .cl-card__remove):is(:hover, :focus-within) { padding-right: 36px; }
+/* 列表没有留白时（.cl-list--flush），浮动操作收回卡片内 */
+.cl-list--flush .cl-card__handle { left: 2px; }
+.cl-list--flush .cl-card__remove { right: 2px; }
 
-/* 卡片下方展开的明细条（持仓盈亏） */
+/* 卡片下方展开的明细条（持仓盈亏），.is-rise / .is-fall / .is-flat 给汇总行着色 */
 .cl-card__strip {
   flex-basis: 100%;
   display: grid;
@@ -1144,7 +1193,10 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
   font-variant-numeric: tabular-nums;
 }
 .cl-card__strip strong { grid-column: 1 / -1; font-size: var(--fs-xs); font-weight: 800; color: var(--text-secondary); }
-.cl-card:has(.cl-card__strip) { flex-wrap: wrap; }
+.cl-card__strip.is-rise strong { color: var(--rise); }
+.cl-card__strip.is-fall strong { color: var(--fall); }
+.cl-card__strip.is-flat strong { color: var(--text-muted); }
+.cl-card:has(> .cl-card__strip) { flex-wrap: wrap; align-items: flex-start; }
 
 /* ============================================================
  * 8. 指标卡 / 数据展示
@@ -1162,6 +1214,20 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
 .cl-stat__label { font-size: var(--fs-xs); color: var(--text-muted); letter-spacing: 0.04em; }
 .cl-stat__value { font-size: var(--fs-2xl); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .cl-stat__delta { font-size: var(--fs-xs); font-weight: 700; font-variant-numeric: tabular-nums; }
+.cl-stat__value.cl-rise, .cl-stat__delta.cl-rise { color: var(--rise); }
+.cl-stat__value.cl-fall, .cl-stat__delta.cl-fall { color: var(--fall); }
+.cl-stat-grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 6px; }
+/* 紧凑指标卡：用于 280px 小部件的账户汇总 */
+.cl-stat--compact {
+  gap: 5px;
+  padding: 8px 7px;
+  border-radius: var(--radius-sm);
+  border-color: rgb(var(--ink) / 0.07);
+  background: rgb(var(--ink) / 0.04);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.035);
+}
+.cl-stat--compact .cl-stat__label { font-size: 10px; line-height: 1; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cl-stat--compact .cl-stat__value { font-size: var(--fs-sm); font-weight: 900; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* 键值列表 */
 .cl-kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: var(--fs-sm); }
@@ -1193,9 +1259,10 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
 
 /* 迷你走势图（SVG） */
 .cl-spark { display: block; width: 100%; height: 100%; overflow: visible; }
-.cl-spark__line { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.cl-spark__line { fill: none; stroke-width: var(--spark-stroke, 1.2px); stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .cl-spark__area { stroke: none; opacity: 0.16; }
-.cl-spark__ref { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.7; }
+.cl-spark__ref { stroke: var(--text-secondary); stroke-width: 0.65px; stroke-dasharray: 3 3; opacity: 0.6; vector-effect: non-scaling-stroke; }
+[data-theme="light"] .cl-spark__ref { opacity: 0.4; }
 .cl-spark__dot { stroke: var(--solid-bg); stroke-width: 1.5; }
 .cl-spark--rise .cl-spark__line { stroke: var(--rise); }
 .cl-spark--rise :is(.cl-spark__area, .cl-spark__dot) { fill: var(--rise); }
@@ -1554,7 +1621,10 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
   box-shadow: var(--shadow-dialog);
   animation: cl-dialog-in 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
+.cl-dialog--xs { width: min(260px, 100%); }
 .cl-dialog--sm { width: min(320px, 100%); }
+/* 固定高度、内容区滚动（设置面板） */
+.cl-dialog--tall { width: min(440px, 100%); height: min(640px, 100%); border-radius: var(--radius-window); }
 .cl-dialog--lg { width: min(560px, 100%); }
 .cl-dialog__head {
   display: flex;
