@@ -6,6 +6,9 @@
 
 - `.cl-statusbar` 改为与 A+ 助手底栏一致：贴底、无分隔线（`padding: 4px 10px 6px`）；需要分隔线时用新增的 `.cl-statusbar--divided`。新增 `.cl-statusbar__actions`（右侧操作组，不换行），底栏里的 `.cl-search` 自动占满剩余宽度。
 - 新增 `.cl-list--dense`：股票卡片固定 44px 行高（收紧卡片上下内边距、右侧数值间距和涨跌胶囊），对应 A+ 助手 1.2.8 的紧凑自选列表。
+- 新增 `.cl-stat--md`（行情磁贴：12px 标题、17px 数值）与 `.cl-stat__arrow`（数值前的 ▲▼）。
+- 新增 `.cl-card--row`（无最小高度的紧凑数据行，排名/持仓对照）与 `.cl-card.is-active`（强调色高亮行）。
+- 新增 `.cl-section-head`（小节标题 + `__sub` 副标题，右侧操作自动靠右，`--lg` 大号）与 `.cl-hint`（10px 说明文字）。
 
 ## 0.3.0
 
