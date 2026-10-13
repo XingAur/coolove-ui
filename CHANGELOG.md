@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.3.0
+
+接入 stock-widget 弹窗与详情页时新增：
+
+- **图表 token**：`--chart-grid / --chart-axis / --chart-hover / --chart-area`，系列色 `--series-1..4`、`--series-avg`（浅色主题自动换成更深的版本）。
+- **SVG 图表元素**：`.cl-chart__grid / __axis / __hover / __area / __line / __baseline / __bar--rise|fall|flat / __tag / __tag-text / __point`，涨跌柱跟随 `data-trend`。
+- **悬停信息卡** `.cl-tooltip-card`（`__title / __row / __key`）。
+- **图例** `.cl-legend--dot`（圆点）。
+- **输入** `.cl-input--lg`（金额等关键输入），与前缀 `¥` 搭配。
+- **提示** `.cl-alert--banner`（对话框头部下方的通栏提示）。
+- **方块图标** `.cl-tile`（`--sm / --success / --warning / --danger / --violet / --muted`），用于交易类型、文件类型。
+- `.cl-eyebrow--accent`。
+- 分段选择新增 `.cl-segmented--ghost`（无轨道、选中浅强调色，用于图表时间范围）、`.cl-segmented--sm`（18px）与 `.cl-segmented--xs`（16px），用于状态行与卡片头部。
+
+## 0.2.2
+
+- `.cl-setting` 允许换行：窄面板里控件较宽时，说明文字保留至少 8em，控件换到下一行。
+- `.cl-swatch` 去掉透明边框，避免色块内出现一圈暗环。
+
+## 0.2.1
+
+- 修复：`.cl-list` 作为滚动容器时子项被压扁，展开明细条的卡片会与下一张重叠（子项改为 `flex-shrink: 0`）。
+- 涨跌胶囊和卡片主数值不再使用等宽数字，避免负号与数字之间出现空隙。
+
 ## 0.2.0
 
 接入 A+ 助手（stock-widget）时补齐的基础能力：

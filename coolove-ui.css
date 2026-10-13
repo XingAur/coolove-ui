@@ -1,5 +1,5 @@
 /*!
- * Coolove UI v0.2.0 —— 从 A+ 助手（stock-widget）提炼的可调透明度玻璃风格组件库
+ * Coolove UI v0.3.0 —— 从 A+ 助手（stock-widget）提炼的可调透明度玻璃风格组件库
  *
  * 核心理念（沿用原项目）：
  *   1. 窗口底色 = 主题底色 × --bg-opacity，配合 backdrop-filter 模糊，形成可调透明度的玻璃质感
@@ -88,6 +88,17 @@
   --danger: var(--c-red-strong);
   --warning: #f59e0b;
 
+  /* —— 图表 —— */
+  --chart-grid: rgb(var(--ink) / 0.07);
+  --chart-axis: var(--text-muted);
+  --chart-hover: rgb(var(--ink) / 0.38);
+  --chart-area: color-mix(in srgb, var(--accent) 18%, transparent);
+  --series-1: #5d7cf6;   /* 如 MA5 */
+  --series-2: #b8d72f;   /* 如 MA10 */
+  --series-3: #8c8dd0;   /* 如 MA20 */
+  --series-4: #ffa04a;   /* 如 MA30 */
+  --series-avg: #f59e0b; /* 均价线 */
+
   /* —— 形状 —— */
   --radius-window: calc(22px * var(--r));
   --radius-lg: calc(14px * var(--r));
@@ -148,6 +159,10 @@
   --shadow-pop: 0 18px 48px rgba(15, 23, 42, 0.16);
   --shadow-dialog: 0 24px 80px rgba(15, 23, 42, 0.24);
   --backdrop: rgba(15, 23, 42, 0.28);
+  --series-2: #8a6d1b;
+  --series-3: #6d6ea6;
+  --series-4: #c27a2c;
+  --series-avg: #c2880a;
   color-scheme: light;
 }
 
@@ -524,12 +539,15 @@
 /* 设置项行：左文字右控件 */
 .cl-setting {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
   padding: 6px 0;
 }
+/* 窄面板里控件较宽时（如分段选择），说明文字保留至少 8em，控件自动换到下一行 */
 .cl-setting__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cl-setting > .cl-setting__info { flex: 1 1 8em; }
 .cl-setting__label { font-size: var(--fs-lg); font-weight: 500; }
 .cl-setting__desc { font-size: var(--fs-sm); color: var(--text-muted); }
 .cl-setting__value { font-size: var(--fs-lg); font-weight: 600; color: var(--accent-text); font-variant-numeric: tabular-nums; }
@@ -567,6 +585,10 @@
 .cl-input.is-invalid:focus { box-shadow: 0 0 0 3px var(--c-red-soft); }
 .cl-input:disabled { opacity: 0.5; cursor: not-allowed; }
 .cl-input--sm { height: var(--ctl-h-sm); font-size: var(--fs-sm); }
+/* 金额等关键输入：更高、更大的数字 */
+.cl-input--lg { height: calc(var(--ctl-h-lg) + 3px); font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.cl-input-wrap:has(.cl-input--lg) .cl-input-wrap__prefix { font-size: 17px; font-weight: 700; color: var(--accent-text); }
+.cl-input-wrap:has(.cl-input-wrap__prefix) > .cl-input--lg { padding-left: 32px; }
 
 .cl-textarea {
   height: auto;
@@ -845,6 +867,17 @@
   background: var(--accent);
   color: var(--text-on-accent);
 }
+/* 幽灵版：没有轨道，选中项为浅强调色（图表时间范围等） */
+.cl-segmented--ghost { padding: 0; gap: 4px; border: none; background: transparent; }
+.cl-segmented--ghost .cl-segmented__item { justify-content: center; }
+.cl-segmented--ghost .cl-segmented__item.is-active,
+.cl-segmented--ghost .cl-segmented__item[aria-pressed="true"],
+.cl-segmented--ghost .cl-segmented__item[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-text); }
+/* 小尺寸：状态行、卡片头部里的切换 */
+.cl-segmented--sm { padding: 2px; }
+.cl-segmented--sm .cl-segmented__item { height: 18px; padding: 0 8px; border-radius: 5px; font-size: 10px; font-weight: 700; }
+.cl-segmented--xs { padding: 1px; gap: 1px; border-radius: var(--radius-xs); }
+.cl-segmented--xs .cl-segmented__item { height: 16px; padding: 0 6px; border-radius: 4px; font-size: 9px; font-weight: 700; }
 .cl-segmented--block { display: flex; }
 .cl-segmented--block .cl-segmented__item { flex: 1; justify-content: center; }
 /* 低调版：选中项只是抬起，不着强调色 */
@@ -894,10 +927,10 @@
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 2px solid transparent;
+  border: none;
   border-radius: 50%;
   background: var(--swatch, var(--accent));
-  box-shadow: inset 0 0 0 1px rgb(var(--ink) / 0.15);
+  box-shadow: inset 0 0 0 1px rgb(var(--ink) / 0.12);
   cursor: pointer;
   transition: transform var(--ease), box-shadow var(--ease);
 }
@@ -937,7 +970,6 @@
   color: var(--text-secondary);
   font-size: var(--fs-xs);
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .cl-pill--rise { color: var(--rise); background: var(--rise-soft); }
@@ -1050,6 +1082,8 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
   padding-inline: var(--list-gutter);
 }
 .cl-list--flush { --list-gutter: 0px; }
+/* 列表本身常作为滚动容器，子项不能被压扁（否则展开明细条的卡片会和下一张重叠） */
+.cl-list > * { flex-shrink: 0; }
 
 .cl-card {
   position: relative;
@@ -1111,7 +1145,7 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
 .cl-card__value { font-size: var(--fs-md); font-weight: 500; line-height: 1; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .cl-card__value--sm { font-size: var(--fs-xs); }
 /* 卡片右侧的主数值（如基金当日涨幅），可配合 .cl-rise / .cl-fall */
-.cl-card__figure { font-size: var(--fs-md); font-weight: 650; line-height: 1; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.cl-card__figure { font-size: var(--fs-md); font-weight: 650; line-height: 1; color: var(--text-secondary); }
 .cl-card__figure.cl-rise { color: var(--rise); }
 .cl-card__figure.cl-fall { color: var(--fall); }
 .cl-card__figure--lg { font-size: 17px; font-weight: 900; }
@@ -1271,6 +1305,45 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
 .cl-spark--accent .cl-spark__line { stroke: var(--accent); }
 .cl-spark--accent :is(.cl-spark__area, .cl-spark__dot) { fill: var(--accent); }
 
+/* SVG 图表基础元素：网格、坐标轴文字、悬停十字线、涨跌柱 */
+.cl-chart__grid { stroke: var(--chart-grid); stroke-width: 1; }
+.cl-chart__axis { fill: var(--chart-axis); font-size: 11px; font-variant-numeric: tabular-nums; }
+.cl-chart__axis--sm { font-size: 9px; }
+.cl-chart__hover { stroke: var(--chart-hover); stroke-width: 1; stroke-dasharray: 4 3; }
+.cl-chart__area { fill: var(--chart-area); }
+.cl-chart__line { fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.cl-chart__baseline { stroke: var(--text-secondary); stroke-width: 1.2; stroke-dasharray: 6 4; opacity: 0.9; vector-effect: non-scaling-stroke; }
+.cl-chart__bar--rise { fill: var(--rise-strong); }
+.cl-chart__bar--fall { fill: var(--fall-strong); }
+.cl-chart__bar--flat { fill: var(--text-muted); }
+/* 坐标轴上的数值标签：强调色底 + 反白文字 */
+.cl-chart__tag { fill: var(--accent); }
+.cl-chart__tag--muted { fill: color-mix(in srgb, var(--text-primary) 62%, var(--solid-bg)); }
+.cl-chart__tag-text { fill: #fff; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cl-chart__point { stroke: var(--solid-bg); stroke-width: 1.4; }
+
+/* 悬停信息卡：跟随鼠标的数值面板 */
+.cl-tooltip-card {
+  position: absolute;
+  z-index: 2;
+  min-width: 132px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-bg);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-primary);
+  font-size: var(--fs-xs);
+  pointer-events: none;
+}
+.cl-tooltip-card__title { margin-bottom: 8px; font-weight: 700; }
+.cl-tooltip-card__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; line-height: 1.5; white-space: nowrap; }
+.cl-tooltip-card__row strong { min-width: 48px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cl-tooltip-card__key { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+
+/* 图例：圆点 + 文字，颜色用 --c */
+.cl-legend--dot > span::before { width: 8px; height: 8px; border-radius: 50%; }
+
 /* 迷你柱状图（纯 CSS，柱子用 --h 0~100） */
 .cl-bars { display: flex; align-items: flex-end; gap: 3px; height: 44px; }
 .cl-bars > i {
@@ -1403,6 +1476,9 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
 .cl-alert--success { --alert-c: var(--c-green); --alert-bg: var(--c-green-soft); }
 .cl-alert--warning { --alert-c: var(--c-amber); --alert-bg: var(--c-amber-soft); }
 .cl-alert--danger { --alert-c: var(--c-err-text); --alert-bg: var(--c-red-soft); }
+/* 通栏提示：贴在对话框头部下方，无圆角、无左右边框 */
+.cl-alert--banner { align-items: center; gap: 6px; padding: 6px 16px; border-width: 1px 0; border-radius: 0; font-size: var(--fs-xs); color: var(--alert-c); }
+.cl-alert--banner > svg { width: 13px; height: 13px; margin: 0; }
 
 .cl-progress {
   --val: 0;
@@ -1757,6 +1833,29 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
  * ============================================================ */
 .cl-divider { height: 1px; margin: 12px 0; border: none; background: var(--divider-color); }
 .cl-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.cl-eyebrow--accent { color: var(--accent-text); }
+
+/* 图标/字符方块：交易类型、文件类型等，--tile-c 决定颜色 */
+.cl-tile {
+  --tile-c: var(--accent);
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--tile-c) 14%, transparent);
+  color: color-mix(in srgb, var(--tile-c) 75%, var(--text-primary));
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.cl-tile svg { width: 15px; height: 15px; }
+.cl-tile--sm { width: 20px; height: 20px; border-radius: var(--radius-xs); font-size: 10px; }
+.cl-tile--success { --tile-c: var(--c-green-strong); }
+.cl-tile--warning { --tile-c: var(--warning); }
+.cl-tile--danger { --tile-c: var(--c-red-strong); }
+.cl-tile--violet { --tile-c: #8b5cf6; }
+.cl-tile--muted { --tile-c: var(--text-muted); background: var(--surface-2); color: var(--text-muted); }
 .cl-muted { color: var(--text-muted); }
 .cl-secondary { color: var(--text-secondary); }
 .cl-num { font-variant-numeric: tabular-nums; }
