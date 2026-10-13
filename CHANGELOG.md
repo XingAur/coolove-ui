@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+完整替换 stock-widget 界面时调整：
+
+- `.cl-statusbar` 改为与 A+ 助手底栏一致：贴底、无分隔线（`padding: 4px 10px 6px`）；需要分隔线时用新增的 `.cl-statusbar--divided`。新增 `.cl-statusbar__actions`（右侧操作组，不换行），底栏里的 `.cl-search` 自动占满剩余宽度。
+- 新增 `.cl-list--dense`：股票卡片固定 44px 行高（收紧卡片上下内边距、右侧数值间距和涨跌胶囊），对应 A+ 助手 1.2.8 的紧凑自选列表。
+
 ## 0.3.0
 
 接入 stock-widget 弹窗与详情页时新增：

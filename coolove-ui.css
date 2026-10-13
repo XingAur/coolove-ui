@@ -367,14 +367,18 @@
   box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
+/* 底栏：与 A+ 助手一致，贴底、无分隔线；需要分隔时加 --divided */
 .cl-statusbar {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px 10px;
-  border-top: 1px solid var(--divider-color);
+  gap: 8px;
+  padding: 4px 10px 6px;
 }
+.cl-statusbar--divided { padding: 8px 10px 10px; border-top: 1px solid var(--divider-color); }
+/* 搜索框占满剩余宽度，右侧操作组不换行 */
+.cl-statusbar > .cl-search { flex: 1 1 auto; min-width: 0; }
+.cl-statusbar__actions { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .cl-statusbar__time {
   font-size: var(--fs-xs);
   color: var(--text-muted);
@@ -1082,6 +1086,10 @@ button.cl-tag:hover { background: var(--surface-3); color: var(--text-primary); 
   padding-inline: var(--list-gutter);
 }
 .cl-list--flush { --list-gutter: 0px; }
+/* 紧凑列表：股票卡片固定 44px 行高（A+ 助手自选列表），收紧上下内边距、右侧数值间距和涨跌胶囊 */
+.cl-list--dense .cl-card { padding-block: 4px; }
+.cl-list--dense .cl-card__side { gap: 3px; }
+.cl-list--dense .cl-pill { padding-block: 2px; }
 /* 列表本身常作为滚动容器，子项不能被压扁（否则展开明细条的卡片会和下一张重叠） */
 .cl-list > * { flex-shrink: 0; }
 
