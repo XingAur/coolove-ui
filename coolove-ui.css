@@ -1,5 +1,5 @@
 /*!
- * Coolove UI v0.4.1 —— 从 A+ 助手（stock-widget）提炼的可调透明度玻璃风格组件库
+ * Coolove UI v0.5.0 —— 从 A+ 助手（stock-widget）提炼的可调透明度玻璃风格组件库
  *
  * 核心理念（沿用原项目）：
  *   1. 窗口底色 = 主题底色 × --bg-opacity，配合 backdrop-filter 模糊，形成可调透明度的玻璃质感
@@ -18,6 +18,46 @@
  * 注意：所有 token 都声明在 ":root, [data-theme]" 上。因为 CSS 变量里的 var() 在声明处求值，
  * 调节 --bg-opacity 等变量时，请设置在带 data-theme 的同一个元素上。
  */
+
+/* Desktop workspace: opt-in; existing widget layouts remain unchanged. */
+.cl-desktop { display: grid; grid-template-columns: var(--sidebar-width, 208px) minmax(0, 1fr); flex: 1; min-height: 0; overflow: hidden; }
+.cl-sidebar { display: flex; flex-direction: column; gap: 20px; padding: 20px 12px; overflow: auto; border-right: 1px solid var(--divider-color); background: var(--surface-1); }
+.cl-sidebar__label { padding: 0 12px; margin: 0 0 8px; color: var(--text-muted); font-size: var(--fs-xs); }
+.cl-nav { display: flex; flex-direction: column; gap: 4px; }
+.cl-nav__item { display: flex; align-items: center; gap: 10px; min-height: 38px; padding: 8px 12px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-secondary); font: inherit; font-size: var(--fs-sm); text-align: left; cursor: pointer; }
+.cl-nav__item:hover { background: var(--surface-2); color: var(--text-primary); }
+.cl-nav__item[aria-current="page"] { background: var(--accent-soft); color: var(--accent-text); font-weight: 650; }
+.cl-nav__item > .cl-nav__meta { margin-left: auto; }
+.cl-workspace { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.cl-split { display: grid; grid-template-columns: minmax(0, 1fr) var(--inspector-width, 280px); flex: 1; min-height: 0; overflow: hidden; }
+.cl-inspector { min-width: 0; padding: 22px; overflow: auto; border-left: 1px solid var(--divider-color); }
+.cl-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--divider-color); }
+.cl-toolbar__spacer { flex: 1; }
+.cl-table--files { table-layout: fixed; }
+.cl-table.cl-table--files td { padding: 13px 12px; }
+.cl-table.cl-table--files th { position: sticky; top: 0; z-index: 1; background: var(--solid-bg); }
+.cl-table.cl-table--files tr[aria-selected="true"] { background: var(--accent-soft); }
+.cl-table--files tr:focus-visible, .cl-nav__item:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: -2px; }
+.cl-file { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cl-file__body { min-width: 0; }
+.cl-file__name, .cl-file__path { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-file__name { color: var(--text-primary); font-weight: 550; }
+.cl-file__path { margin-top: 4px; color: var(--text-muted); font-size: var(--fs-xs); }
+.cl-queuebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 20px; border-top: 1px solid var(--divider-color); background: var(--surface-1); }
+.cl-queuebar__summary { flex: 1; min-width: 140px; }
+@media (max-width: 1050px) {
+  .cl-desktop { --sidebar-width: 174px; }
+  .cl-split { --inspector-width: 230px; }
+  .cl-inspector { padding: 16px; }
+}
+@media (max-width: 760px) {
+  .cl-desktop { --sidebar-width: 144px; }
+  .cl-split { display: flex; flex-direction: column; overflow: auto; }
+  .cl-inspector { border-left: 0; border-top: 1px solid var(--divider-color); flex: 0 0 auto; max-height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cl-desktop *, .cl-dialog * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
 
 /* ============================================================
  * 1. Tokens

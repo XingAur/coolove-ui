@@ -87,6 +87,12 @@ coolove-ui/
 - **反馈**：`cl-alert`（success / warning / danger / banner）`cl-progress` `cl-ring` `cl-meter` + `cl-legend`（dot）`cl-spinner` `cl-skeleton` `cl-toast`
 - **浮层**：`cl-menu`（static）`cl-popover` `cl-dialog`（xs / sm / lg / tall）`cl-sheet` `cl-drawer` `cl-actionbar`；`cl-backdrop--contained` 可把弹窗限制在小部件窗口内
 
+## 完整桌面窗口（0.5.0）
+
+`cl-desktop` 包含 `cl-sidebar` 与 `cl-workspace`。工作区内用 `cl-toolbar` 放筛选条件、`cl-split` 放列表和 `cl-inspector`、`cl-queuebar` 放跨页清单操作。
+侧栏使用 `cl-nav` / `cl-nav__item`，当前项标记 `aria-current="page"`。文件表格使用 `cl-table cl-table--files`，选中行标记 `aria-selected="true"`；文件信息使用 `cl-file` / `cl-file__body` / `cl-file__name` / `cl-file__path`。
+布局宽度可用 `--sidebar-width` / `--inspector-width` 调整。选择、键盘交互、审核和焦点管理由使用方实现。示例见 [desktop.html](./desktop.html)。
+
 ## coolove-ui.js API
 
 ```js

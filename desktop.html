@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coolove UI · 桌面工作区</title><link rel="stylesheet" href="coolove-ui.css">
+<style>
+  html, body { margin: 0; height: 100%; font: 13px var(--font-family); color: var(--text-primary); }
+  .cl-window { height: 100%; border-radius: 0; } .demo-head { padding: 28px; } .demo-head h1 { margin: 0 0 8px; font-size: 24px; }
+  .demo-table { min-height: 0; overflow: auto; } .cl-inspector p { color: var(--text-secondary); line-height: 1.8; }
+</style>
+<div class="cl-window">
+  <header class="cl-titlebar"><b>Coolove UI</b><span class="cl-titlebar__spacer"></span><button class="cl-btn cl-btn--sm" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'">切换亮 / 暗</button></header>
+  <div class="cl-desktop">
+    <aside class="cl-sidebar"><p class="cl-sidebar__label">工作区</p><nav class="cl-nav"><button class="cl-nav__item" aria-current="page">文件总览 <span class="cl-nav__meta">2</span></button><button class="cl-nav__item">受保护资料</button><button class="cl-nav__item">清理清单</button></nav><p class="cl-hint">桌面布局示例 · 模拟数据</p></aside>
+    <main class="cl-workspace"><div class="demo-head"><h1>文件总览</h1><p class="cl-hint">侧栏、工具栏、文件列表与详情栏在同一工作区。</p></div><div class="cl-toolbar"><input class="cl-input" aria-label="搜索示例" placeholder="搜索名称或路径"><span class="cl-toolbar__spacer"></span><button class="cl-btn cl-btn--primary">操作示例</button></div>
+      <div class="cl-split"><div class="demo-table"><table class="cl-table cl-table--files"><thead><tr><th>名称 / 路径</th><th>大小</th><th>状态</th></tr></thead><tbody><tr aria-selected="true" tabindex="0"><td><span class="cl-file"><span class="cl-file__body"><b class="cl-file__name">模型目录</b><small class="cl-file__path">D:\Demo\models</small></span></span></td><td>4.7 GiB</td><td>默认保护</td></tr><tr tabindex="0"><td><span class="cl-file"><span class="cl-file__body"><b class="cl-file__name">缓存目录</b><small class="cl-file__path">D:\Demo\cache</small></span></span></td><td>1.2 GiB</td><td>待审核</td></tr></tbody></table></div><aside class="cl-inspector"><h2>模型目录</h2><p>示例详情区域。使用语义 token，在深浅主题之间保持清晰。</p><div class="cl-alert cl-alert--warning">项目负责实现选择、保护审核和删除逻辑。</div></aside></div>
+      <footer class="cl-queuebar"><div class="cl-queuebar__summary">待处理 0 项</div><button class="cl-btn" disabled>查看清单</button><button class="cl-btn cl-btn--primary" disabled>预览并处理</button></footer>
+    </main>
+  </div>
+</div>
+</html>

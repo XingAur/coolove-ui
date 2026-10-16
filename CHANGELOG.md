@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- 新增可选桌面布局 `cl-desktop`、`cl-sidebar`、`cl-workspace`、`cl-split`、`cl-inspector`，支持可调侧栏与详情栏宽度。
+- 新增 `cl-nav__item` 导航选中态、`cl-toolbar`、`cl-table--files` 粘性表头与多选态、`cl-file` 文件信息和 `cl-queuebar` 清单操作栏。
+- 新组件支持浅色、深色、自定义主题、窄窗口布局和减少动态效果偏好；现有小部件按需接入。
+
 ## 0.4.1
 
 - 修复：组件内的 `.cl-rise / .cl-fall` 被组件默认文字色盖掉（如 `.cl-stat--md` 磁贴的涨跌幅显示为灰色）。状态色规则统一移到样式表末尾，特异性提升到 0,2,0，保证压过同级的默认颜色。
