@@ -2,12 +2,17 @@
 
 从 `stock-widget`（A+ 助手）提炼的可调透明度玻璃风格组件库。纯 CSS + 一个可选的小 JS，无依赖，Vue / 原生 HTML 都能用。当前版本见 `coolove-ui.css` 头部注释和 [CHANGELOG](./CHANGELOG.md)。
 
+当前版本 **0.7.0**：包含完整桌面工作区、文件清单、悬浮玻璃底栏和实验性 Tauri 系统毛玻璃适配。A+ 助手与磁盘管家使用各自仓库内的同步副本，构建时不依赖本仓库位于相邻目录。
+
 ```
 coolove-ui/
 ├── coolove-ui.css          # 全部 token 与组件样式（cl- 前缀）
 ├── coolove-ui.js           # 可选：主题控制、toast、右键菜单、对话框、走势图等
 ├── vue/useCooloveTheme.ts  # Vue 3 接入（不依赖 coolove-ui.js）
+├── vue/useCooloveDock.ts   # Vue 3 悬浮底栏交互
+├── tauri/nativeGlass.ts   # 可选：Tauri 2 原生窗口效果适配
 ├── index.html              # 组件展示页，直接双击打开
+├── desktop.html            # 桌面文件管理工作区示例
 └── CHANGELOG.md
 ```
 
@@ -134,7 +139,7 @@ CooloveUI.configure({ root })          // 浮层挂载点（需在 token 作用�
 
 ## 在 Vue 3 + Tauri 项目里使用
 
-stock-widget 已经完整接入，可以照着做：
+stock-widget（A+ 助手）与 disk-cleaner（磁盘管家）已经接入主题和组件样式，可以照着做；悬浮底栏按需单独接入：
 
 1. 把 `coolove-ui.css` 和 `vue/useCooloveTheme.ts`（用到悬浮底栏时再加 `vue/useCooloveDock.ts`）复制到项目的 `src/coolove-ui/`（stock-widget 里用 `npm run sync:ui` 从本仓库同步），`main.ts` 先引入 `coolove-ui.css` 再引入项目自己的样式。
 2. `index.html` 里 `<div id="app" class="cl-window">`，窗口内部区域不再设置背景色。
@@ -157,10 +162,16 @@ const ok = await applyNativeGlass(mode)            // 'off' | 'auto' | 'acrylic'
 applyCooloveTheme({ ...theme, opacity: 0.7, glass: ok ? 'native' : 'css' })
 ```
 
-`glass: 'native'` 时窗口不再做 CSS 模糊，只用 `--bg-opacity` 在系统效果上叠一层主题色调；弹窗、菜单、悬浮底栏仍用 CSS 模糊窗口内的内容。调用失败或平台不支持时 `applyNativeGlass` 返回 false，保持原来的 CSS 效果。
+`glass: 'native'` 时窗口不再做 CSS 模糊，只用 `--bg-opacity` 在系统效果上叠一层主题色调；弹窗、菜单、悬浮底栏仍用 CSS 模糊窗口内的内容。明确不支持的平台、关闭或 IPC 调用报错时 `applyNativeGlass` 返回 false；返回 true 只表示效果请求被接口接受。当前 Tauri 实现不会向调用方透传所有系统效果失败，因此不能把返回值作为实际效果已经生效的证明。
 
 注意：
 - Windows 10 与 Windows 11 早期版本（22000）上 Acrylic 拖动、缩放窗口时可能卡顿；Blur 在 Windows 11 22H2 起有同样问题。`auto` 会在 Windows 11 用 Acrylic、Windows 10 用 Blur。
 - Mica 只在 Windows 11 可用，取的是桌面壁纸颜色，看不到窗口后面的其他程序。
-- 系统效果按矩形窗口绘制，CSS 圆角剪不掉它；`applyNativeGlass` 会把 `--native-radius` 写成系统窗口圆角（Windows 11 为 8px，Windows 10 为 0，macOS 为 10px）。
+- 系统效果按矩形窗口绘制，CSS 圆角剪不掉它；`applyNativeGlass` 会按平台把 CSS 变量 `--native-radius` 设为建议值（Windows 11 为 8px，Windows 10 为 0，macOS 为 10px）。这不会设置 Windows 的 DWM 圆角；Tauri 的效果 `radius` 参数仅用于 macOS，宿主窗口仍需实机确认边角表现。
 - Linux 不支持，自动退回 CSS 模糊。
+
+### 当前验证边界
+
+原生毛玻璃仍属实验功能，Windows / macOS 的真实模糊、透明窗口边角及拖动性能尚未完成实机验收。宿主需要协调异步效果请求，避免快速切换时旧请求覆盖新设置；当前 A+ 助手与磁盘管家仍存在这一问题，默认保持关闭。
+
+悬浮底栏也有待修复的交互边界：从未选中的项目开始拖动，再在同一项目松开时，视觉选中项可能改变而不触发 `onChange`。接入方验收时应覆盖点击、拖动与外部状态同步。
