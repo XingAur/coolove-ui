@@ -62,6 +62,7 @@ coolove-ui/
 | `data-density` | 属性 | `comfortable` / `compact` |
 | `data-trend` | 属性 | `cn` 红涨绿跌 / `intl` 绿涨红跌 |
 | `data-overlay` | 属性 | `solid` / `glass` |
+| `data-glass` | 属性 | 不写为 CSS 模糊；`native` 为系统毛玻璃（窗口不再做 CSS 模糊，圆角取 `--native-radius`） |
 | `--spark-stroke` | 变量 | 迷你走势线宽，默认 1.2px |
 | `--list-gutter` | 变量 | `.cl-list` 横向留白（浮动操作所在位置），默认 10px |
 
@@ -143,6 +144,23 @@ stock-widget 已经完整接入，可以照着做：
 
 旧变量名 `--window-bg`、`--solid-bg`、`--text-*`、`--border-color`、`--divider-color`、`--input-bg`、`--card-bg`、`--card-bg-hover`、`--radius`、`--radius-sm` 都保留，方便逐步迁移。
 
-### 关于真正的桌面模糊
+### 系统毛玻璃（真正的桌面模糊）
 
-`backdrop-filter` 只能模糊 WebView 内部的内容，透明窗口背后的桌面不会被模糊。想要系统级毛玻璃，可以在 Tauri 端用 [`window-vibrancy`](https://crates.io/crates/window-vibrancy)：Windows 用 `apply_acrylic` / `apply_mica`，macOS 用 `apply_vibrancy`。开启后可以把 `--glass-blur` 设为 0，只保留 `--bg-opacity` 控制色调深浅。
+`backdrop-filter` 只能模糊 WebView 内部的内容，透明窗口背后的桌面不会被模糊。系统级毛玻璃由 Tauri 2 内置的窗口效果提供（Windows Acrylic / Mica / Blur，macOS NSVisualEffectView），coolove-ui 负责配合：
+
+1. `tauri.conf.json` 的窗口设为 `"transparent": true`；macOS 还要 `"app": { "macOSPrivateApi": true }`，并给 `Cargo.toml` 的 tauri 加 `macos-private-api` 特性。
+2. capabilities 加权限 `core:window:allow-set-effects`。
+3. 把 `tauri/nativeGlass.ts` 复制到项目里，按设置调用：
+
+```ts
+const ok = await applyNativeGlass(mode)            // 'off' | 'auto' | 'acrylic' | 'mica' | 'blur'
+applyCooloveTheme({ ...theme, opacity: 0.7, glass: ok ? 'native' : 'css' })
+```
+
+`glass: 'native'` 时窗口不再做 CSS 模糊，只用 `--bg-opacity` 在系统效果上叠一层主题色调；弹窗、菜单、悬浮底栏仍用 CSS 模糊窗口内的内容。调用失败或平台不支持时 `applyNativeGlass` 返回 false，保持原来的 CSS 效果。
+
+注意：
+- Windows 10 与 Windows 11 早期版本（22000）上 Acrylic 拖动、缩放窗口时可能卡顿；Blur 在 Windows 11 22H2 起有同样问题。`auto` 会在 Windows 11 用 Acrylic、Windows 10 用 Blur。
+- Mica 只在 Windows 11 可用，取的是桌面壁纸颜色，看不到窗口后面的其他程序。
+- 系统效果按矩形窗口绘制，CSS 圆角剪不掉它；`applyNativeGlass` 会把 `--native-radius` 写成系统窗口圆角（Windows 11 为 8px，Windows 10 为 0，macOS 为 10px）。
+- Linux 不支持，自动退回 CSS 模糊。

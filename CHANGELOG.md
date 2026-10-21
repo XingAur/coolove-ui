@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0
+
+- **系统毛玻璃**：新增 `data-glass="native"`（`applyTheme({ glass: 'native' })` / `applyCooloveTheme({ glass: 'native' })`）。窗口交给 Tauri 的系统效果（Windows Acrylic / Mica / Blur，macOS vibrancy）模糊桌面，`.cl-window` 不再做 CSS 模糊、只叠主题色调，圆角改用系统窗口圆角 `--native-radius`。
+- 新增 `tauri/nativeGlass.ts`：`applyNativeGlass(mode)` 按系统选择效果（Windows 11 Acrylic、Windows 10 Blur、macOS 系统毛玻璃），失败时清除效果并返回 false；另有 `NATIVE_GLASS_OPTIONS`、`detectNativeGlassPlatform`、`pickEffect`、`nativeRadius`。
+- README 改为使用 Tauri 2 内置的窗口效果，不再需要额外的 window-vibrancy 依赖。
+
 ## 0.6.0
 
 - **悬浮底栏 `cl-dock`**（11.6 节）：手机 App 式的悬浮玻璃胶囊。`cl-dock-area` 负责贴底定位（`--contained` 限制在小部件窗口内，`[hidden]` 可隐藏），`cl-dock__item`（图标 + 文字，`aria-current` / `is-active` 选中、`is-on` 操作已开启），`cl-dock__fab`（中间的强调色主操作），`cl-dock--field` + `cl-dock__field`（评论框胶囊），`cl-dock--actions`（点赞、评论、收藏、分享这类操作组），`cl-dock--sm`。

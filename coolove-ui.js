@@ -24,6 +24,7 @@
     density: 'comfortable', // 'comfortable' | 'compact'
     trend: 'cn',            // 'cn' 红涨绿跌 | 'intl' 绿涨红跌
     overlay: 'solid',       // 'solid' 浮层不透明 | 'glass' 浮层也半透明
+    glass: 'css',           // 'css' 窗口自己做 CSS 模糊 | 'native' 系统毛玻璃（需宿主开启窗口效果）
     fontFamily: null
   }
 
@@ -53,6 +54,8 @@
     el.setAttribute('data-density', state.density)
     el.setAttribute('data-trend', state.trend)
     el.setAttribute('data-overlay', state.overlay)
+    if (state.glass === 'native') el.setAttribute('data-glass', 'native')
+    else el.removeAttribute('data-glass')
 
     s.setProperty('--bg-opacity', String(clamp(Number(state.opacity), 0, 1)))
     s.setProperty('--glass-blur', clamp(Number(state.blur), 0, 80) + 'px')
