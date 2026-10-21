@@ -86,12 +86,34 @@ coolove-ui/
 - **数据**：`cl-stat`（compact / md，`__arrow`）`cl-stat-grid` `cl-table`（compact）`cl-kv` `cl-spark` `cl-chart__*` `cl-tooltip-card` `cl-bars` `cl-accordion` `cl-empty` `cl-tabs` `cl-section-head` `cl-hint`
 - **反馈**：`cl-alert`（success / warning / danger / banner）`cl-progress` `cl-ring` `cl-meter` + `cl-legend`（dot）`cl-spinner` `cl-skeleton` `cl-toast`
 - **浮层**：`cl-menu`（static）`cl-popover` `cl-dialog`（xs / sm / lg / tall）`cl-sheet` `cl-drawer` `cl-actionbar`；`cl-backdrop--contained` 可把弹窗限制在小部件窗口内
+- **悬浮底栏**（手机 App 式）：`cl-dock-area`（`--contained`）`cl-dock`（`--liquid / --field / --actions / --sm`，`--n` 列数、`--i` 选中列）`cl-dock__indicator` `cl-dock__item` `cl-dock__fab` `cl-dock__field`，见下文
 
 ## 完整桌面窗口（0.5.0）
 
 `cl-desktop` 包含 `cl-sidebar` 与 `cl-workspace`。工作区内用 `cl-toolbar` 放筛选条件、`cl-split` 放列表和 `cl-inspector`、`cl-queuebar` 放跨页清单操作。
 侧栏使用 `cl-nav` / `cl-nav__item`，当前项标记 `aria-current="page"`。文件表格使用 `cl-table cl-table--files`，选中行标记 `aria-selected="true"`；文件信息使用 `cl-file` / `cl-file__body` / `cl-file__name` / `cl-file__path`。
 布局宽度可用 `--sidebar-width` / `--inspector-width` 调整。选择、键盘交互、审核和焦点管理由使用方实现。示例见 [desktop.html](./desktop.html)。
+
+### 悬浮底栏
+
+```html
+<div class="cl-dock-area">
+  <nav class="cl-dock cl-dock--liquid" data-cl-dock>
+    <span class="cl-dock__indicator"></span>
+    <button class="cl-dock__item" aria-current="page"><svg>…</svg>首页</button>
+    <button class="cl-dock__item"><svg>…</svg>数码</button>
+    <button class="cl-dock__fab" aria-label="发布"><svg>…</svg></button>
+    <button class="cl-dock__item"><svg>…</svg>发现</button>
+    <button class="cl-dock__item"><svg>…</svg>我的</button>
+  </nav>
+</div>
+```
+
+- 选中块在各项之间滑动，到位时过冲回弹，移动中横向拉长；可以按住左右拖，松手吸附到最近一项。只写 CSS（自己维护 `--i`）时仍然有滑动和回弹，拖动和拉长需要 `CooloveUI.dock()` 或 Vue 的 `useCooloveDock()`。
+- `cl-dock__fab` 和 `[data-no-select]` 的项不会被选中，点击照常触发。
+- 评论页那种两段式：同一个 `cl-dock-area` 里放 `cl-dock cl-dock--field`（里面一个 `cl-dock__field` 假输入框）和 `cl-dock cl-dock--actions`（`style="--n:4"`）。
+- 液态折射（`cl-dock--liquid`）只在 Chromium 内核里生效（Windows 上的 Tauri / WebView2、安卓 WebView、Chrome / Edge），macOS 的 Tauri（WebKit）和 Firefox 自动退回普通磨砂。
+- Vue：`const active = ref(0); useCooloveDock(dockRef, active)`，`active` 与选中列双向同步。
 
 ## coolove-ui.js API
 
@@ -102,16 +124,18 @@ CooloveUI.toast(msg, { type, duration, action: { label, onClick } })
 CooloveUI.contextMenu(event, [{ label, icon, shortcut, danger, disabled, onClick }, 'sep'])
 CooloveUI.openDialog('#id') / closeDialog()
 CooloveUI.sparkline(svgEl, values, { reference, area, tone })
+CooloveUI.dock(el, { onChange, index, strength })   // 悬浮底栏，返回 { set, get, destroy }
+CooloveUI.supportsLiquid() / ensureLiquid(strength)
 CooloveUI.configure({ root })          // 浮层挂载点（需在 token 作用域内）
 ```
 
-声明式属性：`data-cl-open="#dlg"`、`data-cl-close`、`data-cl-menu="#menu"`、`data-cl-select`（分段 / 标签页）、`data-cl-toggle`、`svg[data-cl-spark="1,2,3"][data-ref="2"]`。
+声明式属性：`data-cl-dock`（悬浮底栏）、`data-cl-open="#dlg"`、`data-cl-close`、`data-cl-menu="#menu"`、`data-cl-select`（分段 / 标签页）、`data-cl-toggle`、`svg[data-cl-spark="1,2,3"][data-ref="2"]`。
 
 ## 在 Vue 3 + Tauri 项目里使用
 
 stock-widget 已经完整接入，可以照着做：
 
-1. 把 `coolove-ui.css` 和 `vue/useCooloveTheme.ts` 复制到项目的 `src/coolove-ui/`（stock-widget 里用 `npm run sync:ui` 从本仓库同步），`main.ts` 先引入 `coolove-ui.css` 再引入项目自己的样式。
+1. 把 `coolove-ui.css` 和 `vue/useCooloveTheme.ts`（用到悬浮底栏时再加 `vue/useCooloveDock.ts`）复制到项目的 `src/coolove-ui/`（stock-widget 里用 `npm run sync:ui` 从本仓库同步），`main.ts` 先引入 `coolove-ui.css` 再引入项目自己的样式。
 2. `index.html` 里 `<div id="app" class="cl-window">`，窗口内部区域不再设置背景色。
 3. 在 settings store 的 `applySettings()` 里调用 `applyCooloveTheme({ theme, opacity, blur, accent, customBg, customFg, trend, fontFamily })`。
 4. 组件同时写 `cl-*` 类（外观）和项目自己的语义类（测试、业务钩子），如 `class="cl-card stock-card"`。

@@ -1,11 +1,12 @@
 /*!
- * Coolove UI —— 主题控制 + 轻量交互（无依赖，约 8KB）
+ * Coolove UI —— 主题控制 + 轻量交互（无依赖）
  *
  *   CooloveUI.applyTheme({ theme: 'dark', opacity: 0.85, accent: '#1d9bf0' })
  *   CooloveUI.init()                      // 绑定页面上 data-cl-* 声明的交互
  *   CooloveUI.toast('已刷新', { type: 'success' })
  *   CooloveUI.contextMenu(event, [{ label: '置顶', onClick }])
  *   CooloveUI.sparkline(svg, [1, 2, 3], { reference: 2 })
+ *   CooloveUI.dock('#tabbar', { onChange: (i) => … }) // 悬浮底栏：滑动回弹、拖动吸附、液态折射
  *
  * 在 Vue 里一般只需要 applyTheme / toast / contextMenu / sparkline，其余交互用组件状态驱动即可。
  */
@@ -243,6 +244,166 @@
   }
 
   /* ---------------- 声明式绑定 ---------------- */
+  // ---------- 悬浮底栏：滑动选中块、拉长、拖动吸附、液态折射 ----------
+  var LIQUID_ID = 'cl-liquid'
+  // 位移图：红色通道管横向、绿色通道管纵向；中间 0.5 不位移，越靠边越往里取样，形成水滴边缘的折射
+  var LIQUID_MAP = 'data:image/svg+xml,' + encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'>" +
+    "<defs><linearGradient id='x'><stop offset='0' stop-color='#ff0000'/><stop offset='.28' stop-color='#800000'/><stop offset='.72' stop-color='#800000'/><stop offset='1' stop-color='#000000'/></linearGradient>" +
+    "<linearGradient id='y' x2='0' y2='1'><stop offset='0' stop-color='#00ff00'/><stop offset='.32' stop-color='#008000'/><stop offset='.68' stop-color='#008000'/><stop offset='1' stop-color='#000000'/></linearGradient></defs>" +
+    "<rect width='100' height='100' fill='url(#x)'/><rect width='100' height='100' fill='url(#y)' style='mix-blend-mode:screen'/></svg>")
+
+  /** 只有 Chromium 内核支持 backdrop-filter: url()（Windows WebView2、安卓 WebView、Chrome / Edge） */
+  function supportsLiquid() {
+    if (typeof CSS === 'undefined' || !CSS.supports || !CSS.supports('backdrop-filter', 'url(#a)')) return false
+    var ua = navigator.userAgent || ''
+    return /Chrome\/|Chromium|Edg\//.test(ua) && !/Firefox\//.test(ua)
+  }
+
+  /** 往页面里放一次折射滤镜，strength 为位移强度（px） */
+  function ensureLiquid(strength) {
+    if (typeof document === 'undefined' || document.getElementById(LIQUID_ID)) return
+    var ns = 'http://www.w3.org/2000/svg'
+    var svg = document.createElementNS(ns, 'svg')
+    svg.setAttribute('width', '0')
+    svg.setAttribute('height', '0')
+    svg.setAttribute('aria-hidden', 'true')
+    svg.style.position = 'absolute'
+    svg.innerHTML =
+      '<filter id="' + LIQUID_ID + '" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">' +
+      '<feImage href="' + LIQUID_MAP + '" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map"/>' +
+      '<feDisplacementMap in="SourceGraphic" in2="map" scale="' + (strength || 28) + '" xChannelSelector="R" yChannelSelector="G"/>' +
+      '</filter>'
+    document.body.appendChild(svg)
+  }
+
+  /**
+   * 绑定悬浮底栏。返回 { set(i), get(), destroy() }。
+   * opts.onChange(index, item)：点击或拖动松手后选中了新的一列
+   * 列 = .cl-dock 里除选中块以外的子元素；.cl-dock__fab 和 [data-no-select] 不会被选中（点击照常触发）。
+   */
+  function dock(el, opts) {
+    if (typeof el === 'string') el = document.querySelector(el)
+    if (!el || el._clDock) return el && el._clDock
+    opts = opts || {}
+    var indicator = el.querySelector(':scope > .cl-dock__indicator')
+    var timer = 0
+    var drag = null
+    var suppressClick = false
+
+    function cols() { return Array.prototype.filter.call(el.children, function (c) { return c !== indicator }) }
+    function selectable(c) { return c && c.classList.contains('cl-dock__item') && !c.hasAttribute('data-no-select') && !c.disabled }
+    function get() { return Number(getComputedStyle(el).getPropertyValue('--i')) || 0 }
+
+    if (el.classList.contains('cl-dock--liquid') && supportsLiquid()) {
+      ensureLiquid(opts.strength)
+      el.setAttribute('data-liquid', 'on')
+    }
+    el.style.setProperty('--n', String(cols().length))
+
+    function set(i, silent) {
+      var list = cols()
+      if (!selectable(list[i])) return
+      var from = get()
+      if (i !== from && indicator) {
+        // 跨的列越多拉得越长，最多 1.45 倍
+        el.style.setProperty('--stretch', String(Math.min(1.45, 1.12 + Math.abs(i - from) * 0.1)))
+        el.classList.add('is-moving')
+        clearTimeout(timer)
+        timer = setTimeout(function () { el.classList.remove('is-moving') }, 170)
+      }
+      el.style.setProperty('--i', String(i))
+      el.removeAttribute('data-none')
+      list.forEach(function (c, k) {
+        if (!selectable(c)) return
+        if (k === i) c.setAttribute('aria-current', 'page')
+        else c.removeAttribute('aria-current')
+      })
+      if (!silent) {
+        if (opts.onChange) opts.onChange(i, list[i])
+        el.dispatchEvent(new CustomEvent('cl:change', { detail: { index: i, item: list[i], value: list[i].getAttribute('data-value') }, bubbles: true }))
+      }
+    }
+
+    function onClick(e) {
+      if (suppressClick) { suppressClick = false; e.preventDefault(); e.stopPropagation(); return }
+      var item = e.target.closest && e.target.closest('.cl-dock > *')
+      if (!item || item.parentElement !== el) return
+      var i = cols().indexOf(item)
+      if (selectable(item) && i !== get()) set(i)
+    }
+
+    function onDown(e) {
+      if (!indicator || e.button > 0) return
+      var item = e.target.closest && e.target.closest('.cl-dock > *')
+      if (!item || item.parentElement !== el || !selectable(item)) return
+      drag = { id: e.pointerId, x: e.clientX, start: cols().indexOf(item), moved: false }
+    }
+    function onMove(e) {
+      if (!drag || e.pointerId !== drag.id) return
+      var dx = e.clientX - drag.x
+      if (!drag.moved) {
+        if (Math.abs(dx) < 6) return
+        drag.moved = true
+        el.setPointerCapture && el.setPointerCapture(e.pointerId)
+        el.classList.add('is-dragging')
+      }
+      var w = indicator.offsetWidth
+      var max = (cols().length - 1) * w
+      el.style.setProperty('--drag-x', Math.max(0, Math.min(max, drag.start * w + dx)) + 'px')
+    }
+    function onUp(e) {
+      if (!drag || e.pointerId !== drag.id) return
+      var d = drag
+      drag = null
+      if (!d.moved) return
+      var w = indicator.offsetWidth || 1
+      var x = parseFloat(el.style.getPropertyValue('--drag-x')) || 0
+      // 吸附到最近的可选列
+      var best = -1
+      var bestDist = Infinity
+      cols().forEach(function (c, k) {
+        var dist = Math.abs(k * w - x)
+        if (selectable(c) && dist < bestDist) { best = k; bestDist = dist }
+      })
+      // 先把手指位置写成 --i 再去掉拖动态（画面不动），下一帧再设目标列，选中块从手指处弹过去
+      el.style.setProperty('--i', String(x / w))
+      el.classList.remove('is-dragging')
+      suppressClick = true
+      setTimeout(function () { suppressClick = false }, 0)
+      if (best >= 0) requestAnimationFrame(function () { set(best, best === d.start) })
+    }
+    function onCancel() {
+      if (!drag) return
+      el.classList.remove('is-dragging')
+      drag = null
+    }
+
+    el.addEventListener('click', onClick, true)
+    el.addEventListener('pointerdown', onDown)
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerup', onUp)
+    el.addEventListener('pointercancel', onCancel)
+
+    var initial = cols().findIndex(function (c) { return c.getAttribute('aria-current') === 'page' || c.classList.contains('is-active') })
+    if (initial >= 0) set(initial, true)
+    else if (opts.index != null) set(opts.index, true)
+
+    el._clDock = {
+      set: function (i) { set(i, true) },
+      get: get,
+      destroy: function () {
+        el.removeEventListener('click', onClick, true)
+        el.removeEventListener('pointerdown', onDown)
+        el.removeEventListener('pointermove', onMove)
+        el.removeEventListener('pointerup', onUp)
+        el.removeEventListener('pointercancel', onCancel)
+        delete el._clDock
+      }
+    }
+    return el._clDock
+  }
+
   function init(root) {
     root = root || document
 
@@ -254,6 +415,8 @@
         tone: svg.getAttribute('data-tone') || undefined
       })
     })
+
+    root.querySelectorAll('[data-cl-dock]').forEach(function (el) { dock(el) })
 
     if (root._clBound) return
     root._clBound = true
@@ -368,6 +531,9 @@
     openDialog: openDialog,
     closeDialog: closeDialog,
     sparkline: sparkline,
-    syncRange: syncRange
+    syncRange: syncRange,
+    dock: dock,
+    supportsLiquid: supportsLiquid,
+    ensureLiquid: ensureLiquid
   }
 })(typeof window !== 'undefined' ? window : this)

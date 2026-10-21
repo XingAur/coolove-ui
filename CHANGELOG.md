@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- **悬浮底栏 `cl-dock`**（11.6 节）：手机 App 式的悬浮玻璃胶囊。`cl-dock-area` 负责贴底定位（`--contained` 限制在小部件窗口内，`[hidden]` 可隐藏），`cl-dock__item`（图标 + 文字，`aria-current` / `is-active` 选中、`is-on` 操作已开启），`cl-dock__fab`（中间的强调色主操作），`cl-dock--field` + `cl-dock__field`（评论框胶囊），`cl-dock--actions`（点赞、评论、收藏、分享这类操作组），`cl-dock--sm`。
+- **滑动 Q 弹**：`cl-dock__indicator` 按 `--i` / `--n` 定位，用弹簧曲线（`linear()`，不支持时退回 `cubic-bezier` 过冲）滑到目标列；`is-moving` 时按跨过的列数横向拉长，`is-dragging` 时跟手并略微放大。
+- **液态折射**：`cl-dock--liquid` 的选中块用 SVG 位移滤镜折射背后的内容。只有 Chromium 内核支持（Windows WebView2、安卓 WebView、Chrome / Edge），脚本检测到支持时才写 `data-liquid="on"`，其他环境保持普通磨砂。
+- 玻璃画在 `.cl-dock::before` 上而不是底栏自身，避免底栏成为“背景根”，选中块才能看到并折射底栏后面的内容。
+- `coolove-ui.js` 新增 `CooloveUI.dock(el, { onChange })`（拖动吸附、拉长、`cl:change` 事件）、`supportsLiquid()`、`ensureLiquid()`，`init()` 自动绑定 `[data-cl-dock]`；Vue 侧新增 `vue/useCooloveDock.ts`（`useCooloveDock(el, index)` 双向同步选中列，以及 `bindCooloveDock`、`supportsLiquidGlass`、`ensureLiquidFilter`）。
+- 展示页新增“悬浮底栏”手机示例：导航 / 评论两种底栏，可切换液态折射。
+
 ## 0.5.0
 
 - 新增可选桌面布局 `cl-desktop`、`cl-sidebar`、`cl-workspace`、`cl-split`、`cl-inspector`，支持可调侧栏与详情栏宽度。

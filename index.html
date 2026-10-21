@@ -88,6 +88,19 @@
   .sc-clean-foot__sum strong { color: var(--text-primary); font-variant-numeric: tabular-nums; }
   .sc-size { font-size: var(--fs-sm); font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+  /* 手机示例：悬浮底栏 */
+  .sc-phone { position: relative; width: 320px; max-width: 100%; height: 560px; flex-shrink: 0; }
+  .sc-phone .cl-window__body { padding: 8px 10px 96px; gap: 10px; scrollbar-width: none; }
+  .sc-phone .cl-window__body::-webkit-scrollbar { display: none; }
+  .sc-post { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: var(--radius-md); background: var(--surface-1); border: 1px solid var(--border-color); }
+  .sc-post__who { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 700; }
+  .sc-post__who i { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ec4899); }
+  .sc-post p { margin: 0; font-size: var(--fs-md); line-height: 1.6; }
+  .sc-post p b { color: var(--accent-text); font-weight: 600; }
+  .sc-post__pic { height: 120px; border-radius: var(--radius-sm); background: linear-gradient(120deg, #22c55e, #06b6d4 40%, #6366f1 70%, #ec4899); }
+  .sc-post__pic--b { background: repeating-linear-gradient(90deg, #111827 0 14px, #f9fafb 14px 28px); }
+  .sc-phone__tools { display: flex; align-items: center; gap: 8px; }
+
   /* 组件画廊：瀑布流 */
   .sc-gallery { columns: 2 380px; column-gap: 24px; }
   .sc-section { break-inside: avoid; margin-bottom: 24px; display: flex; flex-direction: column; }
@@ -206,6 +219,14 @@
   <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-thumb" viewBox="0 0 24 24"><path d="M7 10v11H3V10z"/><path d="M7 10l4-7a2.5 2.5 0 0 1 3 3l-1 4h6a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.7 21H7"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M15 3h5v5"/><path d="m20 3-7 7"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 21h7"/></symbol>
 </svg>
 
 <div class="sc-wall" id="wall"></div>
@@ -458,6 +479,48 @@
           <button class="cl-btn" type="button" id="btnRescan"><svg class="i"><use href="#i-refresh"/></svg>重新扫描</button>
           <button class="cl-btn cl-btn--primary" type="button" id="btnClean"><svg class="i"><use href="#i-spark"/></svg>开始清理</button>
         </footer>
+      </section>
+
+      <!-- 悬浮底栏：滑动回弹、拖动吸附、液态折射 -->
+      <section class="cl-window sc-phone" aria-label="悬浮底栏示例">
+        <header class="cl-titlebar">
+          <span class="cl-titlebar__title">悬浮底栏</span>
+          <span class="cl-titlebar__spacer"></span>
+          <div class="sc-phone__tools">
+            <div class="cl-segmented cl-segmented--xs" data-cl-select id="phoneMode">
+              <button class="cl-segmented__item" type="button" aria-pressed="true" data-value="tabs">导航</button>
+              <button class="cl-segmented__item" type="button" aria-pressed="false" data-value="comment">评论</button>
+            </div>
+            <label class="cl-switch cl-switch--sm" title="液态折射"><input type="checkbox" id="phoneLiquid" checked><span class="cl-switch__track"></span></label>
+          </div>
+        </header>
+        <div class="cl-window__body">
+          <div class="sc-post"><div class="sc-post__who"><i></i>Gallagher</div><p>导航栏的选中块可以<b>按住左右拖</b>，松手会弹到最近的一项；点得远一点，能看到它被拉长再回弹。</p><div class="sc-post__pic"></div></div>
+          <div class="sc-post"><div class="sc-post__who"><i></i>多巴胺</div><p>把下面这块黑白条纹滚到底栏后面，选中块边缘的条纹会被折弯（Chromium 内核才有折射，其他浏览器是普通磨砂）。</p><div class="sc-post__pic sc-post__pic--b"></div></div>
+          <div class="sc-post"><div class="sc-post__who"><i></i>秋野</div><p>右上角可以切换成评论页的两段式底栏：左边是写评论，右边是点赞、评论、收藏、分享。</p><div class="sc-post__pic"></div></div>
+          <div class="sc-post"><div class="sc-post__who"><i></i>小 k</div><p>底栏只叠一层玻璃：主题、透明度跟着左侧设置走，浅色主题顶边高光更亮。</p><div class="sc-post__pic sc-post__pic--b"></div></div>
+        </div>
+        <div class="cl-dock-area cl-dock-area--contained" id="phoneTabs">
+          <nav class="cl-dock cl-dock--liquid" id="phoneDock" data-cl-dock aria-label="底栏导航">
+            <span class="cl-dock__indicator"></span>
+            <button class="cl-dock__item" type="button" aria-current="page"><svg class="i"><use href="#i-home"/></svg>首页</button>
+            <button class="cl-dock__item" type="button"><svg class="i"><use href="#i-phone"/></svg>数码</button>
+            <button class="cl-dock__fab" type="button" aria-label="发布"><svg class="i"><use href="#i-plus"/></svg></button>
+            <button class="cl-dock__item" type="button"><svg class="i"><use href="#i-compass"/></svg>发现</button>
+            <button class="cl-dock__item" type="button"><svg class="i"><use href="#i-user"/></svg>我的<span class="cl-count cl-count--accent">3</span></button>
+          </nav>
+        </div>
+        <div class="cl-dock-area cl-dock-area--contained" id="phoneComment" hidden>
+          <div class="cl-dock cl-dock--field cl-dock--sm">
+            <button class="cl-dock__field" type="button"><svg class="i"><use href="#i-pen"/></svg><span>写评论</span></button>
+          </div>
+          <div class="cl-dock cl-dock--actions cl-dock--sm" style="--n:4">
+            <button class="cl-dock__item" type="button" aria-pressed="false" id="phoneLike"><svg class="i"><use href="#i-thumb"/></svg><small>832</small></button>
+            <button class="cl-dock__item" type="button"><svg class="i"><use href="#i-chat"/></svg><small>431</small></button>
+            <button class="cl-dock__item" type="button"><svg class="i"><use href="#i-star"/></svg><small>71</small></button>
+            <button class="cl-dock__item" type="button"><svg class="i"><use href="#i-share"/></svg><small>5</small></button>
+          </div>
+        </div>
       </section>
     </div>
 
@@ -1362,6 +1425,24 @@ CooloveUI.<b>init</b>()</pre>
 
   desk.addEventListener('cl:open', function () { dock.style.visibility = 'hidden' })
   desk.addEventListener('cl:close', function () { dock.style.visibility = '' })
+
+  // 悬浮底栏示例
+  $('#phoneMode').addEventListener('cl:change', function (e) {
+    var tabs = e.detail.value === 'tabs'
+    $('#phoneTabs').hidden = !tabs
+    $('#phoneComment').hidden = tabs
+  })
+  $('#phoneLiquid').addEventListener('change', function (e) {
+    var d = $('#phoneDock')
+    if (e.target.checked && CooloveUI.supportsLiquid()) d.setAttribute('data-liquid', 'on')
+    else d.removeAttribute('data-liquid')
+  })
+  $('#phoneLike').addEventListener('click', function () {
+    var on = this.getAttribute('aria-pressed') !== 'true'
+    this.setAttribute('aria-pressed', String(on))
+    this.classList.toggle('is-on', on)
+    this.querySelector('small').textContent = on ? '833' : '832'
+  })
 
   CooloveUI.configure({ root: desk })
   CooloveUI.init(document)
